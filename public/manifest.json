@@ -1,0 +1,21 @@
+{
+  "name": "Nairobi Grocer",
+  "short_name": "NairobiGrocer",
+  "description": "Fresh groceries delivered to your door in Nairobi.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4FDF6",
+  "theme_color": "#50C878",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
