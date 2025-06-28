@@ -78,7 +78,7 @@ export default function OrdersPage() {
                                     return (
                                         <li key={item.productId} className="flex justify-between items-center text-sm">
                                             <span>{product ? product.name : 'Unknown Product'} x {item.quantity}</span>
-                                            <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                                            <span className="font-medium">KSH{(item.price * item.quantity).toFixed(2)}</span>
                                         </li>
                                     );
                                 })}

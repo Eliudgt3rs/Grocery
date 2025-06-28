@@ -256,7 +256,7 @@ export default function CheckoutPage() {
                         Qty: {item.quantity}
                       </p>
                     </div>
-                    <p>${(item.product.price * item.quantity).toFixed(2)}</p>
+                    <p>KSH{(item.product.price * item.quantity).toFixed(2)}</p>
                   </div>
                 ))}
               </div>

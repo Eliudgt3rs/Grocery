@@ -98,9 +98,9 @@ export default function OrderDetailsPage() {
                                         <Image src={item.product.image} alt={item.product.name} width={64} height={64} className="rounded-md object-cover" />
                                         <div className="flex-grow">
                                             <p className="font-medium">{item.product.name}</p>
-                                            <p className="text-muted-foreground">Qty: {item.quantity} &times; ${item.price.toFixed(2)}</p>
+                                            <p className="text-muted-foreground">Qty: {item.quantity} &times; Ksh{item.price.toFixed(2)}</p>
                                         </div>
-                                        <p className="font-semibold">${(item.quantity * item.price).toFixed(2)}</p>
+                                        <p className="font-semibold">Ksh{(item.quantity * item.price).toFixed(2)}</p>
                                     </div>
                                 ))}
                             </div>

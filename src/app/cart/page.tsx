@@ -32,7 +32,7 @@ export default function CartPage() {
                         <div className="flex justify-between items-start">
                           <div>
                             <h3 className="font-semibold text-base sm:text-lg">{product.name}</h3>
-                            <p className="text-sm text-muted-foreground">${product.price.toFixed(2)}</p>
+                            <p className="text-sm text-muted-foreground">KSH{product.price.toFixed(2)}</p>
                           </div>
                           <Button variant="ghost" size="icon" className="text-muted-foreground sm:hidden -mt-2 -mr-2" onClick={() => removeFromCart(product.id)}>
                             <Trash2 className="h-5 w-5" />
@@ -44,7 +44,7 @@ export default function CartPage() {
                             <Input type="number" value={quantity} readOnly className="h-8 w-12 text-center" />
                             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(product.id, quantity + 1)}><Plus className="h-4 w-4"/></Button>
                           </div>
-                          <p className="font-semibold text-base sm:text-lg">${(product.price * quantity).toFixed(2)}</p>
+                          <p className="font-semibold text-base sm:text-lg">KSH{(product.price * quantity).toFixed(2)}</p>
                         </div>
                       </div>
                       <Button variant="ghost" size="icon" className="text-muted-foreground hidden sm:flex" onClick={() => removeFromCart(product.id)}>

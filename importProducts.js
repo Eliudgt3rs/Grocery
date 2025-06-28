@@ -1,10 +1,10 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./nairobi-grocer-e7a84-firebase-adminsdk-fbsvc-0dd8ec4cec.json'); // <--- REPLACE WITH YOUR SERVICE ACCOUNT KEY PATH
+const serviceAccount = require('./nairobi-grocer-e7a84-firebase-adminsdk-fbsvc-3c06d1456f.json'); // <--- REPLACE WITH YOUR SERVICE ACCOUNT KEY PATH
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-   databaseURL: 'https://console.firebase.google.com/u/0/project/nairobi-grocer-e7a84/firestore/databases/-default-/data/~2Forders~2FkaHbFb5upzpuZAmowAgb' // <--- Optional: Uncomment and replace if needed for other services
+   databaseURL: 'https://console.firebase.google.com/u/0/project/nairobi-grocer-e7a84/firestore/databases/-default-/data/~2Fproducts~2F1' // <--- Optional: Uncomment and replace if needed for other services
 });
 
 const db = admin.firestore();

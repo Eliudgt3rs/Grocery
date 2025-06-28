@@ -36,7 +36,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <span>{product.rating}</span>
                 <span className="text-muted-foreground text-xs">({product.reviews})</span>
             </div>
-            <p className="text-lg font-semibold text-primary">${product.price.toFixed(2)}</p>
+            <p className="text-lg font-semibold text-primary">Ksh{product.price.toFixed(2)}</p>
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">

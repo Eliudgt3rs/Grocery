@@ -39,7 +39,7 @@ export default function CartSheet({ onClose }: { onClose: () => void }) {
                   <div className="flex-grow">
                     <p className="font-medium">{product.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {quantity} &times; ${product.price.toFixed(2)}
+                      {quantity} &times; Ksh{product.price.toFixed(2)}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                         <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(product.id, quantity - 1)} disabled={quantity <= 1}><Minus className="h-3 w-3"/></Button>
@@ -54,7 +54,7 @@ export default function CartSheet({ onClose }: { onClose: () => void }) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">${(product.price * quantity).toFixed(2)}</p>
+                    <p className="font-semibold">Ksh{(product.price * quantity).toFixed(2)}</p>
                     <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 mt-1" onClick={() => removeFromCart(product.id)}>
                         <Trash2 className="h-4 w-4" />
                     </Button>
