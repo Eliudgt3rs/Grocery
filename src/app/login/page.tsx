@@ -84,7 +84,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-64px-88px)]"> {/* Adjust height based on header/footer */}
+    <div className="flex items-center justify-center p-12 min-h-[calc(100vh-64px-88px)]"> {/* Adjust height based on header/footer */}
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Login</CardTitle>
