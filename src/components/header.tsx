@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Bike, Menu, Search, ShoppingCart, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/context/cart-provider";
 import { useAuth } from "@/context/auth-provider"; // Import useAuth
 import { signOut } from "firebase/auth"; // Import signOut
@@ -136,12 +136,16 @@ export default function Header() {
                 <span className="sr-only">Open Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left">
-              <div className="flex flex-col gap-6 pt-10">
-                <Link href="/" className="flex items-center gap-2 mb-4">
+            <SheetContent side="left" className="flex flex-col p-0">
+              <SheetHeader className="p-6 pb-4 border-b">
+                <SheetTitle>
+                  <Link href="/" className="flex items-center gap-2">
                     <Bike className="h-6 w-6 text-primary" />
                     <span className="font-bold text-lg">Nairobi Grocer</span>
-                </Link>
+                  </Link>
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-6 p-6 flex-grow">
                 <nav className="flex flex-col gap-4 text-lg font-medium">
                   {navLinks.map(({ href, label }) => (
                     <Link
@@ -153,9 +157,12 @@ export default function Header() {
                     </Link>
                   ))}
                 </nav>
+              </div>
+              <div className="p-6 pt-0 mt-auto">
                  {/* Authentication dependent rendering in mobile menu */}
                 {!loading && (
-                  user ? (
+                  <div className="flex flex-col gap-2">
+                  {user ? (
                     <>
                        <Link href="/account/orders" passHref>
                          <Button variant="outline" size="default" className="w-full">
@@ -173,7 +180,8 @@ export default function Header() {
                            Login
                        </Button>
                     </Link>
-                  )
+                  )}
+                  </div>
                 )}
               </div>
             </SheetContent>
