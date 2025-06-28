@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/cart-provider";
 import { useAuth } from "@/context/auth-provider";
-import { placeOrder, PlaceOrderInput } from "./actions";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,7 +81,7 @@ export default function CheckoutPage() {
 
     setIsPlacingOrder(true);
 
-    const orderData: PlaceOrderInput = {
+    const orderData = {
       items: cartItems.map((item) => ({
         productId: item.product.id,
         quantity: item.quantity,
@@ -93,26 +94,29 @@ export default function CheckoutPage() {
       customerName: shippingInfo.name,
       customerPhone: shippingInfo.phone,
       userId: currentUser.uid,
+      date: serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     };
 
     try {
-      const result = await placeOrder(orderData);
+      const docRef = await addDoc(collection(db, "orders"), orderData);
+      console.log("Order placed with ID: ", docRef.id);
 
       toast({
-        title: result.title,
-        description: result.message,
-        variant: result.success ? "default" : "destructive",
+        title: "Order Confirmed!",
+        description: "Your order has been placed successfully.",
+        variant: "default",
       });
 
-      if (result.success) {
-        clearCart();
-        router.push('/account/orders');
-      }
+      clearCart();
+      router.push('/account/orders');
+
     } catch (error) {
       console.error("Error placing order:", error);
       toast({
-        title: "Error",
-        description: "There was an unexpected error placing your order. Please try again.",
+        title: "Order Failed",
+        description: "There was a problem saving your order. Please try again.",
         variant: "destructive",
       });
     } finally {
