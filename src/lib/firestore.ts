@@ -27,7 +27,7 @@ export const getOrders = async (): Promise<Order[]> => {
       return {
         id: doc.id,
         userId: data.userId,
-        date: (data.date as Timestamp).toDate().toISOString().split('T')[0],
+        date: (data.date as Timestamp).toDate(),
         status: data.status,
         items: data.items,
         total: data.total,
@@ -39,7 +39,7 @@ export const getOrders = async (): Promise<Order[]> => {
     });
 
     // Sort orders by date in descending order (newest first) on the client-side
-    orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    orders.sort((a, b) => b.date.getTime() - a.date.getTime());
     
     return orders;
   } catch (error) {
@@ -59,7 +59,7 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
       return {
         id: orderDocSnap.id,
         userId: data.userId,
-        date: (data.date as Timestamp).toDate().toISOString().split('T')[0],
+        date: (data.date as Timestamp).toDate(),
         status: data.status,
         items: data.items,
         total: data.total,

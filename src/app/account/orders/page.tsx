@@ -67,7 +67,7 @@ export default function OrdersPage() {
                         <CardHeader className="flex flex-row justify-between items-start">
                             <div>
                                 <CardTitle className="text-xl">{order.id}</CardTitle>
-                                <CardDescription>Ordered on: {order.date}</CardDescription>
+                                <CardDescription>Ordered on: {order.date.toLocaleDateString()}</CardDescription>
                             </div>
                             <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'}>{order.status}</Badge>
                         </CardHeader>

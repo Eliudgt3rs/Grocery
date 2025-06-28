@@ -11,7 +11,7 @@ type OrderItem = {
 export type Order = {
   id?: string;
   userId: string;
-  date: string;
+  date: Date;
   items: OrderItem[];
   total: number;
   deliveryFee: number;
@@ -38,7 +38,3 @@ export interface Product {
   reviews: number;
   aiHint?: string;
 }
-
-
-
-

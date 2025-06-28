@@ -16,7 +16,7 @@ const mockOrderHistory = orderHistoryData.flatMap(order =>
   order.items.map(item => ({
     productId: item.product.id,
     quantity: item.quantity,
-    orderDate: order.date
+    orderDate: order.date.toISOString().split('T')[0]
   }))
 );
 

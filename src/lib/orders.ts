@@ -4,7 +4,7 @@ import { products } from './products';
 export const orders: Order[] = [
   {
     id: 'ORD-12345',
-    date: '2023-10-26',
+    date: new Date('2023-10-26'),
     status: 'Delivered',
     items: [
       { product: products.find(p => p.id === '1')!, quantity: 2 },
@@ -16,7 +16,7 @@ export const orders: Order[] = [
   },
   {
     id: 'ORD-12346',
-    date: '2023-10-28',
+    date: new Date('2023-10-28'),
     status: 'Processing',
     items: [
       { product: products.find(p => p.id === '5')!, quantity: 2 },

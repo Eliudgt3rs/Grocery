@@ -7,6 +7,7 @@ import { products } from '@/lib/products'; // Assuming your products are here
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import type { Order } from '@/types';
 
 // Define a type that combines order item data with product details for display
 interface DisplayOrderItem {
@@ -22,7 +23,7 @@ interface DisplayOrderItem {
 
 export default function OrderDetailsPage() {
     const { id } = useParams(); // Get the order ID from the URL
-    const [order, setOrder] = useState<any>(null); // State to store the fetched order
+    const [order, setOrder] = useState<Order | null>(null); // State to store the fetched order
     const [displayItems, setDisplayItems] = useState<DisplayOrderItem[]>([]); // State to store items with product details
 
     useEffect(() => {
@@ -107,7 +108,7 @@ export default function OrderDetailsPage() {
                         <p className="font-medium">Delivery Address</p>
                         <p className="text-muted-foreground">{order.deliveryAddress}</p>
                         <p className="font-medium mt-4">Estimated Delivery</p>
-                        <p className="text-muted-foreground">{new Date(new Date(order.date).getTime() + 2 * 24 * 60 * 60 * 1000).toDateString()}</p>
+                        <p className="text-muted-foreground">{new Date(order.date.getTime() + 2 * 24 * 60 * 60 * 1000).toDateString()}</p>
                     </CardContent>
                 </Card>
         </div>
