@@ -5,7 +5,7 @@ import { messaging, db, auth } from './firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 // IMPORTANT: Replace with your VAPID key from Firebase Console > Project Settings > Cloud Messaging > Web configuration
-const VAPID_KEY = 'YOUR_VAPID_KEY_HERE';
+const VAPID_KEY = 'BEgqzxCaY44Olt24o7YoimQNjg_xFsPuOzPQ-Jh2kFAZnTivrnHUqBDUOgSe3fGmzKwTGxom3_ILNVLZMcx1XnE';
 
 export const requestNotificationPermission = async () => {
     if (!auth.currentUser) {
