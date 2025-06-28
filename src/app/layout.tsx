@@ -35,7 +35,7 @@ export default function RootLayout({
             </main>
             <Footer />
           </div>
-          <Toaster position="top-center" />
+          <Toaster />
         </CartProvider>
         </AuthProvider>
       </body>
