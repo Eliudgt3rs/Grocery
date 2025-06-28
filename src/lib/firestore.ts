@@ -1,39 +1,41 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs, getDoc, doc, Timestamp, addDoc, query, where, runTransaction } from "firebase/firestore"; // Import runTransaction
+import { collection, getDocs, getDoc, doc, Timestamp, addDoc, query, where, runTransaction, orderBy } from "firebase/firestore";
 import type { Order } from '@/types';
-import { auth } from "@/lib/firebase"; // Import auth to get the current user
+import { auth } from "@/lib/firebase";
 
 const ordersCollection = collection(db, "orders");
 
 // Function to fetch orders for the current user from Firestore
 export const getOrders = async (): Promise<Order[]> => {
   try {
-    const user = auth.currentUser; // Get the current authenticated user
+    const user = auth.currentUser;
 
     if (!user) {
-      // If no user is authenticated, return an empty array or throw an error
       console.log("No authenticated user to fetch orders for.");
       return [];
     }
 
-    // Create a query to get orders where userId matches the current user's UID
     const userOrdersQuery = query(
       ordersCollection,
-      where("userId", "==", user.uid)
+      where("userId", "==", user.uid),
+      orderBy("date", "desc")
     );
 
-    const querySnapshot = await getDocs(userOrdersQuery); // Use the filtered query
+    const querySnapshot = await getDocs(userOrdersQuery);
 
     const orders: Order[] = querySnapshot.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
         userId: data.userId,
-        date: (data.date as Timestamp).toDate().toISOString().split('T')[0], // Convert Timestamp to string date
+        date: (data.date as Timestamp).toDate().toISOString().split('T')[0],
         status: data.status,
         items: data.items,
         total: data.total,
+        deliveryFee: data.deliveryFee,
         deliveryAddress: data.deliveryAddress,
+        customerName: data.customerName,
+        customerPhone: data.customerPhone,
       } as Order;
     });
     return orders;
@@ -54,13 +56,14 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
       return {
         id: orderDocSnap.id,
         userId: data.userId,
-        date: (data.date as Timestamp).toDate().toISOString().split('T')[0], // Convert Timestamp to string date
-        status: data.status,
+        date: (data.date as Timestamp).toDate().toISOString().split('T')[0],
         status: data.status,
         items: data.items,
         total: data.total,
         deliveryFee: data.deliveryFee,
-
+        deliveryAddress: data.deliveryAddress,
+        customerName: data.customerName,
+        customerPhone: data.customerPhone,
       } as Order;
     } else {
       console.log("No such order!");
@@ -72,12 +75,12 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
   }
 };
 
-const metadataCollection = collection(db, "metadata"); // Assuming you have a metadata collection
+const metadataCollection = collection(db, "metadata");
 
 export async function createOrder(orderData: Omit<Order, 'id' | 'date' | 'createdAt' | 'updatedAt' | 'orderNumber'>) {
   try {
     const orderNumber = await runTransaction(db, async (transaction) => {
-      const counterRef = doc(metadataCollection, "orderCounter"); // Reference to your counter document
+      const counterRef = doc(metadataCollection, "orderCounter");
       const counterDoc = await transaction.get(counterRef);
 
       let currentCount = 0;
@@ -86,26 +89,24 @@ export async function createOrder(orderData: Omit<Order, 'id' | 'date' | 'create
       }
 
       const newCount = currentCount + 1;
-      transaction.update(counterRef, { count: newCount }); // Increment and update the counter
+      transaction.update(counterRef, { count: newCount });
 
-      // Create the new order document with the sequential order number
-      const newOrderRef = doc(ordersCollection); // Use doc() without ID to let Firestore generate one
+      const newOrderRef = doc(ordersCollection);
       transaction.set(newOrderRef, {
         ...orderData,
         date: Timestamp.now(),
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
-        orderNumber: newCount, // Add the sequential order number
+        orderNumber: newCount,
       });
 
-      return newCount; // Return the new sequential order number
+      return newCount;
     });
 
     console.log("Order created with sequential number: ", orderNumber);
-    return orderNumber; // Return the sequential order number
+    return orderNumber;
   } catch (e) {
     console.error("Error adding document: ", e);
     throw e;
   }
 }
-
