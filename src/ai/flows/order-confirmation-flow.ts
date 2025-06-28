@@ -52,12 +52,12 @@ const getOrderByIdTool = ai.defineTool(
 );
 
 
-export const OrderConfirmationInputSchema = z.object({
+const OrderConfirmationInputSchema = z.object({
   orderId: z.string().describe('The ID of the order to confirm.'),
 });
 export type OrderConfirmationInput = z.infer<typeof OrderConfirmationInputSchema>;
 
-export const OrderConfirmationOutputSchema = z.object({
+const OrderConfirmationOutputSchema = z.object({
     title: z.string().describe('The title of the notification message.'),
     message: z.string().describe('The body of the notification message.'),
 });
