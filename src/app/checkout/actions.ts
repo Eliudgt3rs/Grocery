@@ -1,6 +1,6 @@
 'use server';
 
-import { createOrder } from '@/lib/firestore';
+import { createOrderWithAdmin } from '@/lib/firebase-admin';
 import type { Order } from '@/types';
 
 // Define the input type for the action
@@ -15,7 +15,7 @@ export type PlaceOrderOutput = {
 
 export async function placeOrder(orderData: PlaceOrderInput): Promise<PlaceOrderOutput> {
     try {
-        const newOrderId = await createOrder(orderData);
+        const newOrderId = await createOrderWithAdmin(orderData);
         if (!newOrderId) {
             throw new Error('Failed to create order in database.');
         }

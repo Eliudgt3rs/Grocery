@@ -96,37 +96,3 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
     throw error;
   }
 };
-
-
-export async function createOrder(orderData: Omit<Order, 'id' | 'date' | 'createdAt' | 'updatedAt' | 'orderNumber'>) {
-  const newOrderRef = doc(ordersCollection); // Create ref outside to have access to the ID.
-  try {
-    await runTransaction(db, async (transaction) => {
-      const counterRef = doc(metadataCollection, "orderCounter");
-      const counterDoc = await transaction.get(counterRef);
-
-      let currentCount = 0;
-      if (counterDoc.exists()) {
-        currentCount = counterDoc.data().count || 0;
-      }
-
-      const newCount = currentCount + 1;
-      transaction.set(counterRef, { count: newCount }, { merge: true });
-
-      // Use the ref created outside the transaction
-      transaction.set(newOrderRef, {
-        ...orderData,
-        date: Timestamp.now(),
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        orderNumber: newCount,
-      });
-    });
-
-    console.log("Order created with ID: ", newOrderRef.id);
-    return newOrderRef.id; // Return the document ID
-  } catch (e) {
-    console.error("Error adding document: ", e);
-    throw e;
-  }
-}
