@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./nairobi-grocer-e7a84-firebase-adminsdk-fbsvc-3c06d1456f.json'); // <--- REPLACE WITH YOUR SERVICE ACCOUNT KEY PATH
+//const serviceAccount = require('./nairobi-grocer-e7a84-firebase-adminsdk-fbsvc-3c06d1456f.json'); // <--- REPLACE WITH YOUR SERVICE ACCOUNT KEY PATH
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
