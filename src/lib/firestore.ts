@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs, getDoc, doc, Timestamp, addDoc, query, where, runTransaction, orderBy } from "firebase/firestore";
+import { collection, getDocs, getDoc, doc, Timestamp, addDoc, query, where, runTransaction } from "firebase/firestore";
 import type { Order } from '@/types';
 import { auth } from "@/lib/firebase";
 
@@ -17,8 +17,7 @@ export const getOrders = async (): Promise<Order[]> => {
 
     const userOrdersQuery = query(
       ordersCollection,
-      where("userId", "==", user.uid),
-      orderBy("date", "desc")
+      where("userId", "==", user.uid)
     );
 
     const querySnapshot = await getDocs(userOrdersQuery);
@@ -38,6 +37,10 @@ export const getOrders = async (): Promise<Order[]> => {
         customerPhone: data.customerPhone,
       } as Order;
     });
+
+    // Sort orders by date in descending order (newest first) on the client-side
+    orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
     return orders;
   } catch (error) {
     console.error("Error getting orders: ", error);
