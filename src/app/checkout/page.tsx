@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { Loader2 } from "lucide-react";
 
 const deliveryZones = [
   { name: "Westlands", fee: 5.0 },
@@ -36,6 +37,7 @@ export default function CheckoutPage() {
     address: "",
     zone: "",
   });
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
     if (!loading && !currentUser) {
@@ -76,10 +78,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    const { id: toastId, update } = toast({
-      title: "Placing your order...",
-      description: "Please hold on while we confirm everything.",
-    });
+    setIsPlacingOrder(true);
 
     const orderData: PlaceOrderInput = {
       items: cartItems.map((item) => ({
@@ -99,8 +98,7 @@ export default function CheckoutPage() {
     try {
       const result = await placeOrder(orderData);
 
-      update({
-        id: toastId,
+      toast({
         title: result.title,
         description: result.message,
         variant: result.success ? "default" : "destructive",
@@ -112,12 +110,13 @@ export default function CheckoutPage() {
       }
     } catch (error) {
       console.error("Error placing order:", error);
-      update({
-        id: toastId,
+      toast({
         title: "Error",
-        description: "There was an error placing your order. Please try again.",
+        description: "There was an unexpected error placing your order. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsPlacingOrder(false);
     }
   };
 
@@ -152,6 +151,7 @@ export default function CheckoutPage() {
                   required
                   value={shippingInfo.name}
                   onChange={handleShippingInputChange}
+                  disabled={isPlacingOrder}
                 />
               </div>
               <div className="space-y-2">
@@ -162,6 +162,7 @@ export default function CheckoutPage() {
                   required
                   value={shippingInfo.phone}
                   onChange={handleShippingInputChange}
+                  disabled={isPlacingOrder}
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -171,6 +172,7 @@ export default function CheckoutPage() {
                   required
                   value={shippingInfo.address}
                   onChange={handleShippingInputChange}
+                  disabled={isPlacingOrder}
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -183,6 +185,7 @@ export default function CheckoutPage() {
                     const foundZone = deliveryZones.find((z) => z.name === value);
                     setDeliveryFee(foundZone ? foundZone.fee : 0);
                   }}
+                  disabled={isPlacingOrder}
                 >
                   <SelectTrigger id="zone">
                     <SelectValue placeholder="Select your zone" />
@@ -204,7 +207,7 @@ export default function CheckoutPage() {
               <CardTitle>Payment Method</CardTitle>
             </CardHeader>
             <CardContent>
-              <RadioGroup defaultValue="mpesa" className="space-y-4">
+              <RadioGroup defaultValue="mpesa" className="space-y-4" disabled={isPlacingOrder}>
                 <Label
                   htmlFor="mpesa"
                   className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary"
@@ -271,10 +274,11 @@ export default function CheckoutPage() {
               </div>
               <Button
                 type="submit"
-                disabled={cartItems.length === 0}
+                disabled={cartItems.length === 0 || isPlacingOrder}
                 className="w-full mt-6 bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                Place Order
+                {isPlacingOrder && (<Loader2 className="mr-2 h-4 w-4 animate-spin" />)}
+                {isPlacingOrder ? "Placing Order..." : "Place Order"}
               </Button>
             </CardContent>
           </Card>
