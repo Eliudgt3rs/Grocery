@@ -65,7 +65,7 @@ export default function Home() {
     <div className="space-y-12 py-8">
       <section className="relative h-80 rounded-lg overflow-hidden">
         <Image
-          src="https://source.unsplash.com/1200x400/?grocery,store,produce"
+          src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200&h=400&fit=crop"
           alt="Fresh groceries promotion"
           fill
           style={{ objectFit: "cover" }}
