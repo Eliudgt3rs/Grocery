@@ -98,7 +98,7 @@ export default function CheckoutPage() {
         description: `Your order with ID ${newOrderId} has been placed.`,
       });
       clearCart();
-      router.push(`/orders/${newOrderId}`);
+      router.push('/account/orders');
     } catch (error) {
       console.error("Error placing order:", error);
       toast({
