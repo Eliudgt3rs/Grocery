@@ -1,3 +1,31 @@
+// In src/types/index.ts
+
+import { Timestamp } from "firebase/firestore";
+
+type OrderItem = {
+  productId: string;
+  quantity: number;
+  price: number;
+};
+
+export type Order = {
+  id?: string;
+  userId: string;
+  date: string;
+  items: OrderItem[];
+  total: number;
+  deliveryFee: number;
+  deliveryAddress: string;
+  status: "Processing" | "Shipped" | "Delivered" | "Cancelled";
+  customerName: string;
+  customerPhone: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+
+// You'll also need your Product type definition
+// export type Product = { ... }
 export interface Product {
   id: string;
   name: string;
@@ -11,17 +39,6 @@ export interface Product {
   aiHint?: string;
 }
 
-export interface CartItem {
-  product: Product;
-  quantity: number;
-}
 
-export interface Order {
-  id: string;
-  date: string;
-  status: 'Placed' | 'Processing' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
-  items: CartItem[];
-  total: number;
-  deliveryFee: number;
-  deliveryAddress: string;
-}
+
+

@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from "@/context/cart-provider";
 import Header from "@/components/header";
+import { AuthProvider } from "@/context/auth-provider";
 import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#F4FDF6" />
       </head>
       <body className="font-body antialiased">
+        <AuthProvider>
         <CartProvider>
           <div className="flex flex-col min-h-screen bg-background">
             <Header />
@@ -33,8 +35,9 @@ export default function RootLayout({
             </main>
             <Footer />
           </div>
-          <Toaster />
+          <Toaster position="top-center" />
         </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

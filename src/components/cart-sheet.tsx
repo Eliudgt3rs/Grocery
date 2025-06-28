@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "./ui/input";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 
-export default function CartSheet() {
+export default function CartSheet({ onClose }: { onClose: () => void }) {
   const { cartItems, cartCount, cartTotal, removeFromCart, updateQuantity } = useCart();
 
   return (
@@ -74,7 +74,10 @@ export default function CartSheet() {
                 Shipping and taxes calculated at checkout.
               </p>
               <Link href="/cart" passHref>
-                <Button className="w-full mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
+                <Button
+                  className="w-full mt-4 bg-accent text-accent-foreground hover:bg-accent/90"
+                  onClick={onClose} // Call the onClose function to close the sheet
+                >
                   View Cart & Checkout
                 </Button>
               </Link>

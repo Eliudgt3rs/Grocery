@@ -1,0 +1,42 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow anyone to read products
+    match /products/{productId} {
+      allow read: if true;
+      // You might want to restrict write access to authenticated users or administrators
+      allow write: if request.auth != null;
+    }
+
+    // Rules for user data (optional, adjust based on your user data structure)
+    match /users/{userId} {
+      // Allow authenticated users to read their own data
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Allow authenticated users to create their own user document
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Allow authenticated users to update their own data
+      allow update: if request.auth != null && request.auth.uid == userId;
+      // Allow authenticated users to delete their own data
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Example rule for an 'orders' collection (if you have one)
+    match /orders/{orderId} {
+      // Allow authenticated users to read their own orders (individual document)
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Allow authenticated users to create orders
+      allow create: if request.auth != null;
+      // Restrict updates/deletes based on your application logic
+      allow update, delete: if false; // Example: disallow updates/deletes after creation
+    }
+
+    // Deny all other reads and writes by default
+    match /orders/{orderId} {
+      allow list: if request.auth != null;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
