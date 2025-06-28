@@ -63,7 +63,7 @@ export default function Home() {
 
   return (
     <div className="space-y-12 py-8">
-      <section className="relative h-80 rounded-lg overflow-hidden">
+      <section className="relative h-64 sm:h-80 rounded-lg overflow-hidden">
         <Image
           src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200&h=400&fit=crop"
           alt="Fresh groceries promotion"
@@ -73,9 +73,9 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-black/40 z-10" />
         <div className="relative z-20 flex flex-col items-center justify-center h-full text-center text-white p-4">
-          <h1 className="text-4xl md:text-5xl font-bold font-headline">Fresh Groceries Delivered Fast</h1>
-          <p className="mt-4 max-w-2xl text-lg">Your favorite local Nairobi vendor, now online. Quality produce, unbeatable prices.</p>
-          <Button size="lg" className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90 text-lg py-6 px-8">
+          <h1 className="text-4xl sm:text-5xl font-bold font-headline">Fresh Groceries Delivered Fast</h1>
+          <p className="mt-4 max-w-2xl text-base sm:text-lg">Your favorite local Nairobi vendor, now online. Quality produce, unbeatable prices.</p>
+          <Button size="lg" className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90 text-base sm:text-lg py-3 px-6 sm:py-4 sm:px-8">
             Shop All Products
           </Button>
         </div>
@@ -113,7 +113,7 @@ export default function Home() {
         ) : error ? (
           <p className="text-center text-red-500 py-8">Error: {error}</p>
         ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {filteredProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}

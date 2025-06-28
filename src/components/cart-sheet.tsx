@@ -42,10 +42,11 @@ export default function CartSheet({ onClose }: { onClose: () => void }) {
                       {quantity} &times; ${product.price.toFixed(2)}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
-                        <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(product.id, quantity - 1)}><Minus className="h-3 w-3"/></Button>
+                        <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(product.id, quantity - 1)} disabled={quantity <= 1}><Minus className="h-3 w-3"/></Button>
                         <Input
                             type="number"
                             value={quantity}
+                            readOnly
                             onChange={(e) => updateQuantity(product.id, parseInt(e.target.value) || 0)}
                             className="h-6 w-12 text-center px-1"
                         />
@@ -89,7 +90,7 @@ export default function CartSheet({ onClose }: { onClose: () => void }) {
             <h3 className="text-lg font-semibold">Your cart is empty</h3>
             <p className="text-muted-foreground">Add some groceries to get started.</p>
             <Link href="/" passHref>
-                <Button className="mt-6">Start Shopping</Button>
+                <Button className="mt-6" onClick={onClose}>Start Shopping</Button>
             </Link>
         </div>
       )}

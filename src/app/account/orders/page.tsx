@@ -64,9 +64,9 @@ export default function OrdersPage() {
                 {orders.length > 0 ? (
                     orders.map(order => (
                     <Card key={order.id}>
-                        <CardHeader className="flex flex-row justify-between items-start">
+                        <CardHeader className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
                             <div>
-                                <CardTitle className="text-xl">{order.id}</CardTitle>
+                                <CardTitle className="text-xl">Order #{order.orderNumber}</CardTitle>
                                 <CardDescription>Ordered on: {order.date.toLocaleDateString()}</CardDescription>
                             </div>
                             <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'}>{order.status}</Badge>
@@ -88,7 +88,7 @@ export default function OrdersPage() {
                         <CardFooter className="flex justify-between items-center pt-4">
                             <div className="font-bold">Total: ${order.total.toFixed(2)}</div>
                             <Link href={`/orders/${order.id}`} passHref>
-                                <Button variant="outline">Track Order</Button>
+                                <Button variant="outline">View Details</Button>
                             </Link>
                         </CardFooter>
                     </Card>

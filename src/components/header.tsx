@@ -78,7 +78,7 @@ export default function Header() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <form onSubmit={handleSearch} className="hidden md:flex items-center">
             <div className="relative">
                 <Input type="search" name="search" placeholder="Search products..." className="pr-10" />
@@ -89,7 +89,7 @@ export default function Header() {
           </form>
 
           <Link href="/cart" passHref>
-            <Button variant="default">View Cart</Button>
+            <Button variant="default" className="hidden sm:inline-flex">View Cart</Button>
           </Link>
           <Sheet open={isCartSheetOpen} onOpenChange={setIsCartSheetOpen}> {/* Control sheet state */}
             <SheetTrigger asChild>
