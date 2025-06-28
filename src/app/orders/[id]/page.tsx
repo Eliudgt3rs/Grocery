@@ -95,7 +95,7 @@ export default function OrderDetailsPage() {
                             <div className="space-y-4">
                                 {displayItems.map((item, index) => (
                                     <div key={index} className="flex items-center gap-4">
-                                        <Image src={item.product.image} alt={item.product.name} width={64} height={64} className="rounded-md object-cover" data-ai-hint={item.product.aiHint} />
+                                        <Image src={item.product.image} alt={item.product.name} width={64} height={64} className="rounded-md object-cover" />
                                         <div className="flex-grow">
                                             <p className="font-medium">{item.product.name}</p>
                                             <p className="text-muted-foreground">Qty: {item.quantity} &times; ${item.price.toFixed(2)}</p>

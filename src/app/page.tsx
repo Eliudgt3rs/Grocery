@@ -65,12 +65,11 @@ export default function Home() {
     <div className="space-y-12 py-8">
       <section className="relative h-80 rounded-lg overflow-hidden">
         <Image
-          src="https://placehold.co/1200x400.png"
+          src="https://source.unsplash.com/1200x400/?grocery,store,produce"
           alt="Fresh groceries promotion"
           fill
           style={{ objectFit: "cover" }}
           className="z-0"
-          data-ai-hint="grocery store"
         />
         <div className="absolute inset-0 bg-black/40 z-10" />
         <div className="relative z-20 flex flex-col items-center justify-center h-full text-center text-white p-4">

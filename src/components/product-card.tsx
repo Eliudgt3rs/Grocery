@@ -24,7 +24,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           width={400}
           height={400}
           className="w-full h-48 object-cover"
-          data-ai-hint={product.aiHint}
         />
         <Badge variant="secondary" className="absolute top-2 right-2">{product.category}</Badge>
       </CardHeader>

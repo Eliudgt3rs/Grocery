@@ -35,7 +35,6 @@ export default function CartSheet({ onClose }: { onClose: () => void }) {
                     width={80}
                     height={80}
                     className="rounded-md object-cover"
-                    data-ai-hint={product.aiHint}
                   />
                   <div className="flex-grow">
                     <p className="font-medium">{product.name}</p>

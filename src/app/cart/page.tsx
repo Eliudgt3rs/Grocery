@@ -25,7 +25,7 @@ export default function CartPage() {
                 <div className="divide-y">
                   {cartItems.map(({ product, quantity }) => (
                     <div key={product.id} className="flex items-center gap-4 p-4">
-                      <Image src={product.image} alt={product.name} width={100} height={100} className="rounded-lg object-cover" data-ai-hint={product.aiHint}/>
+                      <Image src={product.image} alt={product.name} width={100} height={100} className="rounded-lg object-cover" />
                       <div className="flex-grow">
                         <h3 className="font-semibold">{product.name}</h3>
                         <p className="text-sm text-muted-foreground">${product.price.toFixed(2)}</p>
