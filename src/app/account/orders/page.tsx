@@ -60,7 +60,7 @@ export default function OrdersPage() {
                         <Card key={order.id}>
                             <CardHeader className="flex flex-row justify-between items-start">
                                 <div>
-                                    <CardTitle className="text-xl">{order.id}</CardTitle>
+                                    <CardTitle className="text-xl">Order #{order.orderNumber}</CardTitle>
                                     <CardDescription>
                                         Ordered on: {new Date(order.date).toLocaleDateString() || "N/A"}
                                     </CardDescription>
