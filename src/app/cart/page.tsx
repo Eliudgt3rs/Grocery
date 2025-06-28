@@ -12,8 +12,7 @@ import SmartRecommendations from "@/components/smart-recommendations";
 
 export default function CartPage() {
   const { cartItems, cartTotal, removeFromCart, updateQuantity } = useCart();
-  const deliveryFee = cartItems.length > 0 ? 5.00 : 0; // Mock delivery fee
-  const total = cartTotal + deliveryFee;
+  const total = cartTotal;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -68,10 +67,6 @@ export default function CartPage() {
                 <div className="flex justify-between">
                   <span>Subtotal</span>
                   <span>${cartTotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Delivery Fee</span>
-                  <span>${deliveryFee.toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
