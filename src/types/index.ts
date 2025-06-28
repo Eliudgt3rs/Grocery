@@ -9,7 +9,7 @@ type OrderItem = {
 };
 
 export type Order = {
-  id?: string;
+  id: string;
   userId: string;
   date: Date;
   items: OrderItem[];

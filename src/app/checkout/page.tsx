@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/cart-provider";
 import { useAuth } from "@/context/auth-provider";
-import { createOrder } from "@/lib/firestore";
-import { generateOrderConfirmation } from "@/ai/flows/order-confirmation-flow";
+import { placeOrder, PlaceOrderInput } from "./actions";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,7 +81,7 @@ export default function CheckoutPage() {
       description: "Please hold on while we confirm everything.",
     });
 
-    const orderData = {
+    const orderData: PlaceOrderInput = {
       items: cartItems.map((item) => ({
         productId: item.product.id,
         quantity: item.quantity,
@@ -98,18 +97,19 @@ export default function CheckoutPage() {
     };
 
     try {
-      const newOrderId = await createOrder(orderData);
-      
-      const confirmation = await generateOrderConfirmation({ orderId: newOrderId });
+      const result = await placeOrder(orderData);
 
       update({
         id: toastId,
-        title: confirmation.title,
-        description: confirmation.message,
+        title: result.title,
+        description: result.message,
+        variant: result.success ? "default" : "destructive",
       });
-      
-      clearCart();
-      router.push('/account/orders');
+
+      if (result.success) {
+        clearCart();
+        router.push('/account/orders');
+      }
     } catch (error) {
       console.error("Error placing order:", error);
       update({
