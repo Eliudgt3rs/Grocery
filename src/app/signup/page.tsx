@@ -16,16 +16,22 @@ export default function SignupPage() {
 
   useEffect(() => {
     const handleRedirectResult = async () => { 
+      console.log("Attempting to get redirect result..."); // Added log
       try {
         const result = await getRedirectResult(auth);
         if (result) {
         // User signed up/in with Google
           console.log("Signed up/in with Google:", result.user);
+          // You might want to perform additional actions here after successful signup,
+          // like saving user data to Firestore if needed.
           router.push('/'); // Redirect to home after successful signup/sign-in
+        } else {
+          console.log("No redirect result found."); // Added log
         }
       } catch (err: any) {
         setError(err.message);
         console.error("Redirect result error:", err);
+        // You might want to display a user-friendly error message here
       }
     };
     handleRedirectResult();
