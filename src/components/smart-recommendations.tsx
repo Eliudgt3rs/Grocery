@@ -3,36 +3,56 @@
 import { useEffect, useState } from "react";
 import { getSmartRecommendations, SmartRecommendationsOutput } from "@/ai/flows/smart-recommendations";
 import { useCart } from "@/context/cart-provider";
-import { products as allProducts } from "@/lib/products";
-import { orders as orderHistoryData } from "@/lib/orders";
+import { useAuth } from "@/context/auth-provider";
+import { getProducts, getOrders } from "@/lib/firestore";
 import ProductCard from "./product-card";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Button } from "./ui/button";
-import type { Product } from "@/types";
-
-const mockOrderHistory = orderHistoryData.flatMap(order => 
-  order.items.map(item => ({
-    productId: item.product.id,
-    quantity: item.quantity,
-    orderDate: order.date.toISOString().split('T')[0]
-  }))
-);
+import type { Product, Order } from "@/types";
 
 export default function SmartRecommendations() {
   const { cartItems, addToCart } = useCart();
+  const { user } = useAuth();
   const [recommendations, setRecommendations] = useState<SmartRecommendationsOutput>([]);
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch all products once on mount
   useEffect(() => {
-    if (cartItems.length > 0) {
+    const fetchAllProducts = async () => {
+        try {
+            const products = await getProducts();
+            setAllProducts(products);
+        } catch (err) {
+            console.error("Failed to fetch products for recommendations:", err);
+            // Non-critical error, don't show to user, just log it.
+        }
+    };
+    fetchAllProducts();
+  }, []);
+
+
+  useEffect(() => {
+    // Only fetch recommendations if we have cart items, a logged-in user, and the base product data.
+    if (cartItems.length > 0 && user && allProducts.length > 0) {
       setLoading(true);
       setError(null);
       const fetchRecommendations = async () => {
         try {
+          // Get user's real order history from Firestore
+          const userOrders: Order[] = await getOrders(); 
+          const formattedOrderHistory = userOrders.flatMap(order => 
+            order.items.map(item => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              orderDate: order.date.toISOString().split('T')[0]
+            }))
+          );
+
           const cartData = cartItems.map(item => ({
             productId: item.product.id,
             quantity: item.quantity
@@ -40,12 +60,13 @@ export default function SmartRecommendations() {
           
           const result = await getSmartRecommendations({ 
             cartItems: cartData, 
-            orderHistory: mockOrderHistory,
+            orderHistory: formattedOrderHistory,
             numberOfRecommendations: 3
           });
           
           setRecommendations(result);
           
+          // Find the full product details from the recommendations
           const products = result.map(rec => allProducts.find(p => p.id === rec.productId)).filter(Boolean) as Product[];
           setRecommendedProducts(products);
 
@@ -57,11 +78,12 @@ export default function SmartRecommendations() {
         }
       };
       fetchRecommendations();
-    } else {
+    } else if (cartItems.length === 0) {
+        // Clear recommendations if the cart is emptied
         setRecommendations([]);
         setRecommendedProducts([]);
     }
-  }, [cartItems]);
+  }, [cartItems, user, allProducts]);
 
   if (cartItems.length === 0) {
     return null;

@@ -1,9 +1,26 @@
 import { db } from "@/lib/firebase";
 import { collection, getDocs, getDoc, doc, Timestamp, addDoc, query, where, runTransaction } from "firebase/firestore";
-import type { Order } from '@/types';
+import type { Order, Product } from '@/types';
 import { auth } from "@/lib/firebase";
 
+const productsCollection = collection(db, "products");
 const ordersCollection = collection(db, "orders");
+const metadataCollection = collection(db, "metadata");
+
+// Function to fetch all products from Firestore
+export const getProducts = async (): Promise<Product[]> => {
+  try {
+    const querySnapshot = await getDocs(productsCollection);
+    const products: Product[] = querySnapshot.docs.map(doc => {
+      return { id: doc.id, ...doc.data() } as Product;
+    });
+    return products;
+  } catch (error) {
+    console.error("Error getting products: ", error);
+    throw error;
+  }
+};
+
 
 // Function to fetch orders for the current user from Firestore
 export const getOrders = async (): Promise<Order[]> => {
@@ -80,7 +97,6 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
   }
 };
 
-const metadataCollection = collection(db, "metadata");
 
 export async function createOrder(orderData: Omit<Order, 'id' | 'date' | 'createdAt' | 'updatedAt' | 'orderNumber'>) {
   const newOrderRef = doc(ordersCollection); // Create ref outside to have access to the ID.
