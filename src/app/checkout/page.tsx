@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/context/cart-provider";
 import { useAuth } from "@/context/auth-provider";
 import { createOrder } from "@/lib/firestore";
+import { generateOrderConfirmation } from "@/ai/flows/order-confirmation-flow";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +77,11 @@ export default function CheckoutPage() {
       return;
     }
 
+    const { id: toastId, update } = toast({
+      title: "Placing your order...",
+      description: "Please hold on while we confirm everything.",
+    });
+
     const orderData = {
       items: cartItems.map((item) => ({
         productId: item.product.id,
@@ -93,15 +99,21 @@ export default function CheckoutPage() {
 
     try {
       const newOrderId = await createOrder(orderData);
-      toast({
-        title: "Order Placed!",
-        description: `Your order with ID ${newOrderId} has been placed.`,
+      
+      const confirmation = await generateOrderConfirmation({ orderId: newOrderId });
+
+      update({
+        id: toastId,
+        title: confirmation.title,
+        description: confirmation.message,
       });
+      
       clearCart();
       router.push('/account/orders');
     } catch (error) {
       console.error("Error placing order:", error);
-      toast({
+      update({
+        id: toastId,
         title: "Error",
         description: "There was an error placing your order. Please try again.",
         variant: "destructive",

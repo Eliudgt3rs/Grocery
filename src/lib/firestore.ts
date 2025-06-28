@@ -35,6 +35,7 @@ export const getOrders = async (): Promise<Order[]> => {
         deliveryAddress: data.deliveryAddress,
         customerName: data.customerName,
         customerPhone: data.customerPhone,
+        orderNumber: data.orderNumber,
       } as Order;
     });
 
@@ -67,6 +68,7 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
         deliveryAddress: data.deliveryAddress,
         customerName: data.customerName,
         customerPhone: data.customerPhone,
+        orderNumber: data.orderNumber,
       } as Order;
     } else {
       console.log("No such order!");
@@ -81,8 +83,9 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
 const metadataCollection = collection(db, "metadata");
 
 export async function createOrder(orderData: Omit<Order, 'id' | 'date' | 'createdAt' | 'updatedAt' | 'orderNumber'>) {
+  const newOrderRef = doc(ordersCollection); // Create ref outside to have access to the ID.
   try {
-    const orderNumber = await runTransaction(db, async (transaction) => {
+    await runTransaction(db, async (transaction) => {
       const counterRef = doc(metadataCollection, "orderCounter");
       const counterDoc = await transaction.get(counterRef);
 
@@ -92,9 +95,9 @@ export async function createOrder(orderData: Omit<Order, 'id' | 'date' | 'create
       }
 
       const newCount = currentCount + 1;
-      transaction.update(counterRef, { count: newCount });
+      transaction.set(counterRef, { count: newCount }, { merge: true });
 
-      const newOrderRef = doc(ordersCollection);
+      // Use the ref created outside the transaction
       transaction.set(newOrderRef, {
         ...orderData,
         date: Timestamp.now(),
@@ -102,12 +105,10 @@ export async function createOrder(orderData: Omit<Order, 'id' | 'date' | 'create
         updatedAt: Timestamp.now(),
         orderNumber: newCount,
       });
-
-      return newCount;
     });
 
-    console.log("Order created with sequential number: ", orderNumber);
-    return orderNumber;
+    console.log("Order created with ID: ", newOrderRef.id);
+    return newOrderRef.id; // Return the document ID
   } catch (e) {
     console.error("Error adding document: ", e);
     throw e;

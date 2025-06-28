@@ -21,6 +21,7 @@ export type Order = {
   customerPhone: string;
   createdAt?: Date;
   updatedAt?: Date;
+  orderNumber?: number;
 };
 
 
