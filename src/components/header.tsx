@@ -14,7 +14,6 @@ import { Input } from "./ui/input";
 import { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import NotificationPermissionButton from "./notification-permission-button";
 
 
 const navLinks = [
@@ -109,7 +108,6 @@ export default function Header() {
             user ? (
               // User is logged in
               <>
-                <NotificationPermissionButton />
                 <Link href="/account/orders" passHref> {/* Link to account orders page */}
                   <Button variant="outline" size="icon" className="hidden md:inline-flex">
                     <User className="h-5 w-5" />

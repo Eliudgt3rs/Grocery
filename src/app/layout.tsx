@@ -9,7 +9,6 @@ import Footer from "@/components/footer";
 export const metadata: Metadata = {
   title: 'Nairobi Grocer',
   description: 'Fresh groceries delivered to your door in Nairobi.',
-  manifest: '/manifest.json'
 };
 
 export default function RootLayout({
@@ -23,7 +22,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <meta name="theme-color" content="#F4FDF6" />
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
