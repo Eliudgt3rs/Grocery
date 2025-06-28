@@ -8,47 +8,53 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 import { getOrders } from "@/lib/firestore";
-import type { Order } from '@/types';
+import type { Order, Product } from '@/types';
+import { collection, getDocs, query } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchUserOrders = async () => {
+        const fetchData = async () => {
             try {
                 const userOrders = await getOrders();
+                
+                const productsCollection = collection(db, "products");
+                const productsQuery = query(productsCollection);
+                const querySnapshot = await getDocs(productsQuery);
+                const fetchedProducts: Product[] = [];
+                querySnapshot.forEach((doc) => {
+                    fetchedProducts.push({ id: doc.id, ...doc.data() } as Product);
+                });
+                
                 setOrders(userOrders);
-            } catch (err: unknown) {
-                if (err instanceof Error) {
-                    setError(err.message);
-                    console.error("Error fetching user orders:", err);
-                } else {
-                    setError("An unknown error occurred.");
-                }
+                setProducts(fetchedProducts);
+                console.log("Fetched orders:", userOrders);
+            } catch (err: any) {
+                setError(err.message);
+                console.error("Error fetching user orders:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchUserOrders();
+        fetchData();
     }, []);
 
+    const getProductById = (productId: string) => {
+        return products.find(p => p.id === productId);
+    };
+
     if (loading) {
-        return (
-            <div className="text-center py-16">
-                <p className="text-xl text-muted-foreground">Loading orders...</p>
-            </div>
-        );
+        return <div className="text-center py-16"><p className="text-xl text-muted-foreground">Loading orders...</p></div>;
     }
 
     if (error) {
-        return (
-            <div className="text-center py-16 text-red-500">
-                <p className="text-xl">Error loading orders: {error}</p>
-            </div>
-        );
+        return <div className="text-center py-16 text-red-500"><p className="text-xl">Error loading orders: {error}</p></div>;
     }
 
     return (
@@ -57,47 +63,36 @@ export default function OrdersPage() {
             <div className="space-y-6">
                 {orders.length > 0 ? (
                     orders.map(order => (
-                        <Card key={order.id}>
-                            <CardHeader className="flex flex-row justify-between items-start">
-                                <div>
-                                    <CardTitle className="text-xl">{order.orderNumber}</CardTitle>
-                                    <CardDescription>
-                                        Ordered on: {new Date(order.date).toLocaleDateString() || "N/A"}
-                                    </CardDescription>
-                                </div>
-                                <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'}>
-                                    {order.status}
-                                </Badge>
-                            </CardHeader>
-
-                            <CardContent>
-                                <ul className="space-y-2">
-                                    {order.items.map(({ product, quantity }, itemIndex) => {
-                                        // Add checks for product and product.name
-                                        if (!product || !product.name) {
-                                            console.warn("Skipping order item due to missing product or product name:", { product, quantity });
-                                            return null; // Skip rendering this item
-                                        }
-
-                                        return (
-                                        <li key={product.id || itemIndex} className="flex justify-between items-center text-sm">
-                                            <span>{product.name} x {quantity}</span>
-                                            <span className="font-medium">${(product.price * quantity).toFixed(2)}</span>
+                    <Card key={order.id}>
+                        <CardHeader className="flex flex-row justify-between items-start">
+                            <div>
+                                <CardTitle className="text-xl">{order.id}</CardTitle>
+                                <CardDescription>Ordered on: {order.date}</CardDescription>
+                            </div>
+                            <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'}>{order.status}</Badge>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="space-y-2">
+                                {order.items.map((item) => {
+                                    const product = getProductById(item.productId);
+                                    return (
+                                        <li key={item.productId} className="flex justify-between items-center text-sm">
+                                            <span>{product ? product.name : 'Unknown Product'} x {item.quantity}</span>
+                                            <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
                                         </li>
-                                    );})}
-                                </ul>
-                            </CardContent>
-
-                            <Separator />
-
-                            <CardFooter className="flex justify-between items-center pt-4">
-                                <div className="font-bold">Total: ${order.total.toFixed(2)}</div>
-                                <Link href={`/orders/${order.id}`}>
-                                    <Button variant="outline">Track Order</Button>
-                                </Link>
-                            </CardFooter>
-                        </Card>
-                    ))
+                                    );
+                                })}
+                            </ul>
+                        </CardContent>
+                        <Separator />
+                        <CardFooter className="flex justify-between items-center pt-4">
+                            <div className="font-bold">Total: ${order.total.toFixed(2)}</div>
+                            <Link href={`/orders/${order.id}`} passHref>
+                                <Button variant="outline">Track Order</Button>
+                            </Link>
+                        </CardFooter>
+                    </Card>
+                ))
                 ) : (
                     <div className="text-center py-16">
                         <p className="text-xl text-muted-foreground">You have not placed any orders yet.</p>
