@@ -15,9 +15,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import MPesaPaymentModal from '@/components/mpesa-payment-modal';
-import CardPaymentModal from '@/components/card-payment-modal';
-import PageSpinner from '@/components/page-spinner';
+import MPesaPaymentModal from "@/components/mpesa-payment-modal";
+import CardPaymentModal from "@/components/card-payment-modal";
+import PageSpinner from "@/components/page-spinner";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
 
@@ -38,7 +38,7 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   const [deliveryFee, setDeliveryFee] = useState(0);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("mpesa");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(""); // Not defaulting
   const [shippingInfo, setShippingInfo] = useState({
     name: "",
     phone: "",
@@ -125,6 +125,15 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!selectedPaymentMethod) {
+      toast({
+        title: "Select a payment method",
+        description: "Please choose how you’d like to pay before placing the order.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (cartItems.length === 0) {
       toast({
         title: "Your cart is empty",
@@ -137,8 +146,8 @@ export default function CheckoutPage() {
 
     if (selectedPaymentMethod === "mpesa") {
       setIsMPesaModalOpen(true);
-    } else {
-      placeOrder();
+    } else if (selectedPaymentMethod === "stripe") {
+      setIsCardModalOpen(true);
     }
   };
 
@@ -207,13 +216,13 @@ export default function CheckoutPage() {
             </CardHeader>
             <CardContent>
               <RadioGroup
-                defaultValue="mpesa"
+                value={selectedPaymentMethod}
                 onValueChange={(value) => {
                   setSelectedPaymentMethod(value);
-                  if (value === 'mpesa') {
+                  if (value === "mpesa") {
                     setIsMPesaModalOpen(true);
                     setIsCardModalOpen(false);
-                  } else if (value === 'stripe') {
+                  } else if (value === "stripe") {
                     setIsCardModalOpen(true);
                     setIsMPesaModalOpen(false);
                   }
@@ -284,18 +293,18 @@ export default function CheckoutPage() {
         amount={cartTotal + deliveryFee}
         onPaymentInitiate={(phoneNumber, amount) => {
           console.log("Initiating M-Pesa payment for", amount, "to", phoneNumber);
-          placeOrder();
+          placeOrder(); // call order logic after M-Pesa simulated
         }}
       />
 
-      {/* Card Modal */}
+      {/* Card Payment Modal */}
       <CardPaymentModal
         isOpen={isCardModalOpen}
         onClose={() => setIsCardModalOpen(false)}
         amount={cartTotal + deliveryFee}
         onPaymentInitiate={(cardDetails) => {
           console.log("Initiating card payment with details:", cardDetails);
-          // Implement Stripe logic here
+          // TODO: Implement actual Stripe payment initiation logic via backend API
         }}
       />
     </div>

@@ -1,15 +1,9 @@
-"use client";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 interface MPesaPaymentModalProps {
   isOpen: boolean;
@@ -18,57 +12,57 @@ interface MPesaPaymentModalProps {
   onPaymentInitiate: (phoneNumber: string, amount: number) => void;
 }
 
-export default function MPesaPaymentModal({
+const MPesaPaymentModal: React.FC<MPesaPaymentModalProps> = ({
   isOpen,
   onClose,
   amount,
   onPaymentInitiate,
-}: MPesaPaymentModalProps) {
+}) => {
   const [phoneNumber, setPhoneNumber] = useState("");
-
-  useEffect(() => {
-    if (!isOpen) {
-      setPhoneNumber("");
-    }
-  }, [isOpen]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handlePayment = () => {
     if (!phoneNumber) return;
+    setIsProcessing(true);
 
-    onPaymentInitiate(phoneNumber, amount);
-    onClose();
+    // Simulate payment process
+    setTimeout(() => {
+      onPaymentInitiate(phoneNumber, amount);
+      setIsProcessing(false);
+      onClose();
+    }, 1500);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Pay with M-Pesa</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="mpesa-phone">Phone Number</Label>
             <Input
-              id="phone"
+              id="mpesa-phone"
               type="tel"
+              placeholder="e.g. 0712345678"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="e.g. 0712345678"
-              required
+              disabled={isProcessing}
             />
           </div>
-          <p className="text-sm text-muted-foreground">
-            You’ll receive a prompt for KES {amount.toFixed(2)} to your phone.
-          </p>
-          <Button
-            className="w-full mt-2"
-            onClick={handlePayment}
-            disabled={!phoneNumber}
-          >
-            Initiate Payment
+          <div className="space-y-2">
+            <Label>Amount</Label>
+            <Input value={`KES ${amount.toFixed(2)}`} disabled />
+          </div>
+          <Button onClick={handlePayment} disabled={!phoneNumber || isProcessing}>
+            {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isProcessing ? "Processing..." : "Initiate Payment"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default MPesaPaymentModal;
