@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import SmartRecommendations from "@/components/smart-recommendations";
+import { toast } from "@/components/ui/use-toast";
 
 export default function CartPage() {
   const { cartItems, cartTotal, removeFromCart, updateQuantity } = useCart();
@@ -91,6 +92,31 @@ export default function CartPage() {
                   Proceed to Checkout
                 </Button>
               </Link>
+              {cartItems.length > 0 && (
+                <Button
+                  variant="outline"
+                  className="w-full mt-4"
+                  onClick={() => {
+                    const message = `Hello, I'd like to order the following items:\n\n${cartItems
+                      .map(
+                        ({ product, quantity }) =>
+                          `- ${quantity} x ${product.name} (KSH${(
+                            product.price * quantity
+                          ).toFixed(2)})`
+                      )
+                      .join("\n")}\n\nTotal: KSH${cartTotal.toFixed(2)}`;
+
+                    // Replace with your WhatsApp number
+                    const whatsappNumber = "+254719790026"; // Replace with the actual WhatsApp number
+                    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+                      message
+                    )}`;
+                    window.open(whatsappUrl, "_blank");
+                  }}
+                >
+                  Order via WhatsApp
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>

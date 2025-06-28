@@ -15,6 +15,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import MPesaPaymentModal from '@/components/mpesa-payment-modal';
+import CardPaymentModal from '@/components/card-payment-modal';
+import PageSpinner from '@/components/page-spinner';
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
 
@@ -25,6 +28,9 @@ const deliveryZones = [
   { name: "Lavington", fee: 5.5 },
 ];
 
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES" }).format(amount);
+
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const { currentUser, loading } = useAuth();
@@ -32,6 +38,7 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   const [deliveryFee, setDeliveryFee] = useState(0);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("mpesa");
   const [shippingInfo, setShippingInfo] = useState({
     name: "",
     phone: "",
@@ -39,6 +46,8 @@ export default function CheckoutPage() {
     zone: "",
   });
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [isMPesaModalOpen, setIsMPesaModalOpen] = useState(false);
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !currentUser) {
@@ -51,35 +60,8 @@ export default function CheckoutPage() {
     }
   }, [currentUser, loading, router, toast]);
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!currentUser) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to place an order.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!shippingInfo.name || !shippingInfo.phone || !shippingInfo.address || !shippingInfo.zone) {
-      toast({
-        title: "Please fill in all shipping information",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (cartItems.length === 0) {
-      toast({
-        title: "Your cart is empty",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsPlacingOrder(true);
+  const placeOrder = async () => {
+    if (!currentUser) return;
 
     const orderData = {
       items: cartItems.map((item) => ({
@@ -106,12 +88,10 @@ export default function CheckoutPage() {
       toast({
         title: "Order Confirmed!",
         description: "Your order has been placed successfully.",
-        variant: "default",
       });
 
       clearCart();
-      router.push('/account/orders');
-
+      router.push("/account/orders");
     } catch (error) {
       console.error("Error placing order:", error);
       toast({
@@ -124,25 +104,59 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleShippingInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handlePlaceOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!currentUser) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to place an order.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!shippingInfo.name || !shippingInfo.phone || !shippingInfo.address || !shippingInfo.zone || deliveryFee === 0) {
+      toast({
+        title: "Please fill in all shipping information",
+        description: "Make sure to select a valid delivery zone.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      toast({
+        title: "Your cart is empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsPlacingOrder(true);
+
+    if (selectedPaymentMethod === "mpesa") {
+      setIsMPesaModalOpen(true);
+    } else {
+      placeOrder();
+    }
+  };
+
+  const handleShippingInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setShippingInfo((prev) => ({ ...prev, [id]: value }));
   };
 
   if (loading || (!currentUser && !loading)) {
-    return <div>Loading...</div>;
+    return <PageSpinner />;
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 font-headline">Checkout</h1>
-      <form
-        onSubmit={handlePlaceOrder}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-      >
+      <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
+          {/* Shipping Info */}
           <Card>
             <CardHeader>
               <CardTitle>Shipping Information</CardTitle>
@@ -150,39 +164,19 @@ export default function CheckoutPage() {
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  required
-                  value={shippingInfo.name}
-                  onChange={handleShippingInputChange}
-                  disabled={isPlacingOrder}
-                />
+                <Input id="name" required value={shippingInfo.name} onChange={handleShippingInputChange} disabled={isPlacingOrder} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  required
-                  value={shippingInfo.phone}
-                  onChange={handleShippingInputChange}
-                  disabled={isPlacingOrder}
-                />
+                <Input id="phone" type="tel" required value={shippingInfo.phone} onChange={handleShippingInputChange} disabled={isPlacingOrder} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  required
-                  value={shippingInfo.address}
-                  onChange={handleShippingInputChange}
-                  disabled={isPlacingOrder}
-                />
+                <Input id="address" required value={shippingInfo.address} onChange={handleShippingInputChange} disabled={isPlacingOrder} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="zone">Delivery Zone</Label>
                 <Select
-                  required
                   value={shippingInfo.zone}
                   onValueChange={(value) => {
                     setShippingInfo((prev) => ({ ...prev, zone: value }));
@@ -197,7 +191,7 @@ export default function CheckoutPage() {
                   <SelectContent>
                     {deliveryZones.map((zone) => (
                       <SelectItem key={zone.name} value={zone.name}>
-                        {zone.name} - ${zone.fee.toFixed(2)}
+                        {zone.name} - {formatCurrency(zone.fee)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -206,24 +200,32 @@ export default function CheckoutPage() {
             </CardContent>
           </Card>
 
+          {/* Payment Method */}
           <Card>
             <CardHeader>
               <CardTitle>Payment Method</CardTitle>
             </CardHeader>
             <CardContent>
-              <RadioGroup defaultValue="mpesa" className="space-y-4" disabled={isPlacingOrder}>
-                <Label
-                  htmlFor="mpesa"
-                  className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary"
-                >
-                  <RadioGroupItem value="mpesa" id="mpesa" />
+              <RadioGroup
+                defaultValue="mpesa"
+                onValueChange={(value) => {
+                  setSelectedPaymentMethod(value);
+                  if (value === 'mpesa') {
+                    setIsMPesaModalOpen(true);
+                    setIsCardModalOpen(false);
+                  } else if (value === 'stripe') {
+                    setIsCardModalOpen(true);
+                    setIsMPesaModalOpen(false);
+                  }
+                }}
+                className="space-y-4"
+              >
+                <Label htmlFor="mpesa" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary">
+                  <RadioGroupItem value="mpesa" id="mpesa" disabled={isPlacingOrder} />
                   M-Pesa
                 </Label>
-                <Label
-                  htmlFor="stripe"
-                  className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary"
-                >
-                  <RadioGroupItem value="stripe" id="stripe" />
+                <Label htmlFor="stripe" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary">
+                  <RadioGroupItem value="stripe" id="stripe" disabled={isPlacingOrder} />
                   Credit/Debit Card (Stripe)
                 </Label>
               </RadioGroup>
@@ -231,6 +233,7 @@ export default function CheckoutPage() {
           </Card>
         </div>
 
+        {/* Order Summary */}
         <div className="lg:col-span-1">
           <Card className="sticky top-24">
             <CardHeader>
@@ -239,24 +242,13 @@ export default function CheckoutPage() {
             <CardContent>
               <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                 {cartItems.map((item) => (
-                  <div
-                    key={item.product.id}
-                    className="flex items-center gap-3 text-sm"
-                  >
-                    <Image
-                      src={item.product.image}
-                      alt={item.product.name}
-                      width={48}
-                      height={48}
-                      className="rounded-md"
-                    />
+                  <div key={item.product.id} className="flex items-center gap-3 text-sm">
+                    <Image src={item.product.image} alt={item.product.name} width={48} height={48} className="rounded-md" />
                     <div className="flex-grow">
                       <p className="font-medium">{item.product.name}</p>
-                      <p className="text-muted-foreground">
-                        Qty: {item.quantity}
-                      </p>
+                      <p className="text-muted-foreground">Qty: {item.quantity}</p>
                     </div>
-                    <p>KSH{(item.product.price * item.quantity).toFixed(2)}</p>
+                    <p>{formatCurrency(item.product.price * item.quantity)}</p>
                   </div>
                 ))}
               </div>
@@ -264,30 +256,48 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>${cartTotal.toFixed(2)}</span>
+                  <span>{formatCurrency(cartTotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Delivery</span>
-                  <span>${deliveryFee.toFixed(2)}</span>
+                  <span>{formatCurrency(deliveryFee)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>${(cartTotal + deliveryFee).toFixed(2)}</span>
+                  <span>{formatCurrency(cartTotal + deliveryFee)}</span>
                 </div>
               </div>
-              <Button
-                type="submit"
-                disabled={cartItems.length === 0 || isPlacingOrder}
-                className="w-full mt-6 bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                {isPlacingOrder && (<Loader2 className="mr-2 h-4 w-4 animate-spin" />)}
+              <Button type="submit" disabled={cartItems.length === 0 || isPlacingOrder} className="w-full mt-6 bg-primary text-primary-foreground hover:bg-primary/90">
+                {isPlacingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isPlacingOrder ? "Placing Order..." : "Place Order"}
               </Button>
             </CardContent>
           </Card>
         </div>
       </form>
+
+      {/* MPesa Modal */}
+      <MPesaPaymentModal
+        isOpen={isMPesaModalOpen}
+        onClose={() => setIsMPesaModalOpen(false)}
+        amount={cartTotal + deliveryFee}
+        onPaymentInitiate={(phoneNumber, amount) => {
+          console.log("Initiating M-Pesa payment for", amount, "to", phoneNumber);
+          placeOrder();
+        }}
+      />
+
+      {/* Card Modal */}
+      <CardPaymentModal
+        isOpen={isCardModalOpen}
+        onClose={() => setIsCardModalOpen(false)}
+        amount={cartTotal + deliveryFee}
+        onPaymentInitiate={(cardDetails) => {
+          console.log("Initiating card payment with details:", cardDetails);
+          // Implement Stripe logic here
+        }}
+      />
     </div>
   );
 }
