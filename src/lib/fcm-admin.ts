@@ -1,31 +1,16 @@
+
 'use server';
 
-import * as admin from 'firebase-admin';
+import { getAdminDb, getAdminMessaging } from './firebase-admin';
 import type { Order } from '@/types';
 
-// The service account key is read from the root of the project
-try {
-    const serviceAccount = require('../../nairobi-grocer-e7a84-firebase-adminsdk-fbsvc-0dd8ec4cec.json');
-    if (!admin.apps.length) {
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-        });
-    }
-} catch (e) {
-    console.error('Could not initialize Firebase Admin SDK. Make sure the service account file exists.', e);
-}
-
-
-const db = admin.firestore();
 
 export async function sendOrderConfirmationNotification(userId: string, order: Order) {
-  if (!admin.apps.length) {
-    console.error('Firebase Admin SDK not initialized.');
-    return;
-  }
-  
   try {
-    const tokenDocRef = db.collection('fcmTokens').doc(userId);
+    const adminDb = getAdminDb();
+    const adminMessaging = getAdminMessaging();
+
+    const tokenDocRef = adminDb.collection('fcmTokens').doc(userId);
     const tokenDoc = await tokenDocRef.get();
 
     if (!tokenDoc.exists) {
@@ -52,7 +37,7 @@ export async function sendOrderConfirmationNotification(userId: string, order: O
       token: token,
     };
 
-    const response = await admin.messaging().send(message);
+    const response = await adminMessaging.send(message);
     console.log('Successfully sent push notification:', response);
 
   } catch (error) {
