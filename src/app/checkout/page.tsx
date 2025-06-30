@@ -5,8 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/cart-provider";
 import { useAuth } from "@/context/auth-provider";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { placeOrderAction, type OrderPayload } from "./actions";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +37,7 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   const [deliveryFee, setDeliveryFee] = useState(0);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(""); // Not defaulting
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [shippingInfo, setShippingInfo] = useState({
     name: "",
     phone: "",
@@ -49,60 +48,46 @@ export default function CheckoutPage() {
   const [isMPesaModalOpen, setIsMPesaModalOpen] = useState(false);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
 
-  const placeOrder = async () => {
+  const processOrderPlacement = async () => {
     setIsPlacingOrder(true);
 
-    const orderData: any = {
-      items: cartItems.map((item) => ({
-        productId: item.product.id,
+    const payload: OrderPayload = {
+      cartItems: cartItems.map(item => ({
+        product: { id: item.product.id, price: item.product.price },
         quantity: item.quantity,
-        price: item.product.price,
       })),
-      total: cartTotal + deliveryFee,
+      cartTotal: cartTotal,
       deliveryFee: deliveryFee,
-      deliveryAddress: `${shippingInfo.address}, ${shippingInfo.zone}`,
-      status: "Processing" as const,
-      customerName: shippingInfo.name,
-      customerPhone: shippingInfo.phone,
-      date: serverTimestamp(),
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      shippingInfo: shippingInfo,
+      userId: currentUser ? currentUser.uid : null,
     };
-
-    if (currentUser) {
-      orderData.userId = currentUser.uid;
-    }
-
-    try {
-      const docRef = await addDoc(collection(db, "orders"), orderData);
-      console.log("Order placed with ID: ", docRef.id);
-
+    
+    const result = await placeOrderAction(payload);
+    
+    if (result.success) {
       toast({
         title: "Order Confirmed!",
         description: "Your order has been placed successfully.",
       });
-
       clearCart();
-      // If user is logged in, go to their orders, otherwise go home.
       router.push(currentUser ? "/account/orders" : "/");
-    } catch (error) {
-      console.error("Error placing order:", error);
+    } else {
       toast({
         title: "Order Failed",
-        description: "There was a problem saving your order. Please try again.",
+        description: result.error || "There was a problem saving your order. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsPlacingOrder(false);
-      setIsMPesaModalOpen(false);
-      setIsCardModalOpen(false);
     }
+
+    setIsPlacingOrder(false);
+    setIsMPesaModalOpen(false);
+    setIsCardModalOpen(false);
   };
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!shippingInfo.name || !shippingInfo.phone || !shippingInfo.address || !shippingInfo.zone || deliveryFee === 0) {
+    if (!shippingInfo.name || !shippingInfo.phone || !shippingInfo.address || !shippingInfo.zone) {
       toast({
         title: "Please fill in all shipping information",
         description: "Make sure to select a valid delivery zone.",
@@ -128,8 +113,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    setIsPlacingOrder(true);
-
     if (selectedPaymentMethod === "mpesa") {
       setIsMPesaModalOpen(true);
     } else if (selectedPaymentMethod === "stripe") {
@@ -145,9 +128,8 @@ export default function CheckoutPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 font-headline">Checkout</h1>
-      <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <form onSubmit={handleFormSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          {/* Shipping Info */}
           <Card>
             <CardHeader>
               <CardTitle>Shipping Information</CardTitle>
@@ -191,7 +173,6 @@ export default function CheckoutPage() {
             </CardContent>
           </Card>
 
-          {/* Payment Method */}
           <Card>
             <CardHeader>
               <CardTitle>Payment Method</CardTitle>
@@ -199,19 +180,16 @@ export default function CheckoutPage() {
             <CardContent>
               <RadioGroup
                 value={selectedPaymentMethod}
-                onValueChange={(value) => {
-                  setSelectedPaymentMethod(value);
-                  setIsMPesaModalOpen(value === "mpesa");
-                  setIsCardModalOpen(value === "stripe");
-                }}
+                onValueChange={setSelectedPaymentMethod}
                 className="space-y-4"
+                disabled={isPlacingOrder}
               >
                 <Label htmlFor="mpesa" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary">
-                  <RadioGroupItem value="mpesa" id="mpesa" disabled={isPlacingOrder} />
+                  <RadioGroupItem value="mpesa" id="mpesa" />
                   M-Pesa
                 </Label>
                 <Label htmlFor="stripe" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary">
-                  <RadioGroupItem value="stripe" id="stripe" disabled={isPlacingOrder} />
+                  <RadioGroupItem value="stripe" id="stripe" />
                   Credit/Debit Card (Stripe)
                 </Label>
               </RadioGroup>
@@ -219,7 +197,6 @@ export default function CheckoutPage() {
           </Card>
         </div>
 
-        {/* Order Summary */}
         <div className="lg:col-span-1">
           <Card className="sticky top-24">
             <CardHeader>
@@ -254,8 +231,8 @@ export default function CheckoutPage() {
                   <span>{formatCurrency(cartTotal + deliveryFee)}</span>
                 </div>
               </div>
-              <Button type="submit" disabled={cartItems.length === 0 || isPlacingOrder} className="w-full mt-6 bg-primary text-primary-foreground hover:bg-primary/90">
-                {isPlacingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={cartItems.length === 0 || isPlacingOrder || !selectedPaymentMethod} className="w-full mt-6 bg-primary text-primary-foreground hover:bg-primary/90">
+                {isPlacingOrder ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isPlacingOrder ? "Placing Order..." : "Place Order"}
               </Button>
             </CardContent>
@@ -263,33 +240,23 @@ export default function CheckoutPage() {
         </div>
       </form>
 
-      {/* MPesa Modal */}
       <MPesaPaymentModal
         isOpen={isMPesaModalOpen}
-        onClose={() => {
-          setIsMPesaModalOpen(false);
-          setIsPlacingOrder(false);
-        }}
+        onClose={() => setIsMPesaModalOpen(false)}
         amount={cartTotal + deliveryFee}
-        onPaymentInitiate={(phoneNumber, amount) => {
-          console.log("Initiating M-Pesa payment for", amount, "to", phoneNumber);
-          placeOrder(); // call order logic after M-Pesa simulated
+        onPaymentInitiate={() => {
+          console.log("Initiating M-Pesa payment simulation");
+          processOrderPlacement();
         }}
       />
 
-      {/* Card Payment Modal */}
       <CardPaymentModal
         isOpen={isCardModalOpen}
-        onClose={() => {
-          setIsCardModalOpen(false);
-          setIsPlacingOrder(false);
-        }}
+        onClose={() => setIsCardModalOpen(false)}
         amount={cartTotal + deliveryFee}
-        onPaymentInitiate={(cardDetails) => {
-          console.log("Initiating card payment with details:", cardDetails);
-          // For this example, we'll just call placeOrder to simulate.
-          // In a real app, you'd integrate with Stripe here.
-          placeOrder();
+        onPaymentInitiate={() => {
+          console.log("Initiating card payment simulation");
+          processOrderPlacement();
         }}
       />
     </div>
