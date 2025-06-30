@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -13,6 +14,7 @@ import { Search } from 'lucide-react';
 import Image from 'next/image';
 
 const categories = ['All', 'Fruits', 'Vegetables', 'Dairy', 'Bakery', 'Meat', 'Pantry', 'Beverages', 'Snacks'];
+const ITEMS_PER_PAGE = 20;
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -21,6 +23,7 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     setSearchTerm(searchParams.get('q') || '');
@@ -28,16 +31,26 @@ export default function Home() {
 
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
-      // Add checks for product and product.name
       if (!product || !product.name) {
-        return false; // Skip this product if it's undefined or has no name
+        return false;
       }
-
       const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesCategory && matchesSearch;
     });
   }, [searchTerm, selectedCategory, products]);
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredProducts.slice(startIndex, endIndex);
+  }, [currentPage, filteredProducts]);
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to first page whenever filters change
+  }, [searchTerm, selectedCategory]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -61,6 +74,13 @@ export default function Home() {
     fetchProducts();
   }, []);
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      window.scrollTo(0, 0); // Scroll to top on page change
+    }
+  };
+
   return (
     <div className="space-y-12 py-8">
       <section className="relative h-64 sm:h-80 rounded-lg overflow-hidden">
@@ -70,6 +90,7 @@ export default function Home() {
           fill
           style={{ objectFit: "cover" }}
           className="z-0"
+          priority
         />
         <div className="absolute inset-0 bg-black/40 z-10" />
         <div className="relative z-20 flex flex-col items-center justify-center h-full text-center text-white p-4">
@@ -112,12 +133,21 @@ export default function Home() {
           <p className="text-center text-muted-foreground py-8">Loading products...</p>
         ) : error ? (
           <p className="text-center text-red-500 py-8">Error: {error}</p>
-        ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {filteredProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+        ) : paginatedProducts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {paginatedProducts.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-8">
+                <Button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</Button>
+                <span className="text-sm font-medium">Page {currentPage} of {totalPages}</span>
+                <Button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>Next</Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-16">
             <p className="text-xl text-muted-foreground">No products found. Try a different search or category.</p>

@@ -1,3 +1,4 @@
+
 // In src/types/index.ts
 
 import { Timestamp } from "firebase/firestore";
@@ -10,7 +11,7 @@ type OrderItem = {
 
 export type Order = {
   id: string;
-  userId: string;
+  userId?: string; // Optional for guest checkouts
   date: Date;
   items: OrderItem[];
   total: number;

@@ -1,20 +1,19 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { Bike, Menu, Search, ShoppingCart, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/context/cart-provider";
-import { useAuth } from "@/context/auth-provider"; // Import useAuth
-import { signOut } from "firebase/auth"; // Import signOut
-import { auth } from "@/lib/firebase"; // Import auth
+import { useAuth } from "@/context/auth-provider";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import CartSheet from "@/components/cart-sheet";
 import { Input } from "./ui/input";
-import { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -23,11 +22,11 @@ const navLinks = [
 
 export default function Header() {
   const { cartCount } = useCart();
-  const { user, loading } = useAuth(); // Get user and loading from auth context
+  const { user, loading } = useAuth();
   const router = useRouter();
-  const [isCartSheetOpen, setIsCartSheetOpen] = useState(false); // State for cart sheet visibility
+  const [isCartSheetOpen, setIsCartSheetOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { toast } = useToast();
-
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,7 +44,8 @@ export default function Header() {
         title: "Logged Out",
         description: "You have been logged out successfully.",
       });
-      router.push("/"); // Redirect to home after logout
+      setIsMobileMenuOpen(false);
+      router.push("/");
     } catch (error: any) {
       console.error("Logout error:", error);
       toast({
@@ -56,6 +56,7 @@ export default function Header() {
     }
   };
 
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -66,15 +67,8 @@ export default function Header() {
             <span className="font-bold text-lg">Nairobi Grocer</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            {navLinks.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="transition-colors hover:text-primary"
-              >
-                {label}
-              </Link>
-            ))}
+            <Link href="/" className="transition-colors hover:text-primary">Home</Link>
+            {user && <Link href="/account/orders" className="transition-colors hover:text-primary">My Orders</Link>}
           </nav>
         </div>
 
@@ -91,7 +85,7 @@ export default function Header() {
           <Link href="/cart" passHref>
             <Button variant="default" className="hidden sm:inline-flex">View Cart</Button>
           </Link>
-          <Sheet open={isCartSheetOpen} onOpenChange={setIsCartSheetOpen}> {/* Control sheet state */}
+          <Sheet open={isCartSheetOpen} onOpenChange={setIsCartSheetOpen}>
             <SheetTrigger asChild>
                 <Button variant="outline" size="icon" className="relative">
                     <ShoppingCart className="h-5 w-5" />
@@ -100,27 +94,24 @@ export default function Header() {
                     )}<span className="sr-only">Open Cart</span>
                 </Button>
             </SheetTrigger>
-            <CartSheet onClose={() => setIsCartSheetOpen(false)} /> {/* Pass close function */}
+            <CartSheet onClose={() => setIsCartSheetOpen(false)} />
           </Sheet>
 
-          {/* Authentication dependent rendering */}
-          {!loading && ( // Show nothing while loading auth state
+          {!loading && (
             user ? (
-              // User is logged in
               <>
-                <Link href="/account/orders" passHref> {/* Link to account orders page */}
+                <Link href="/account/orders" passHref>
                   <Button variant="outline" size="icon" className="hidden md:inline-flex">
                     <User className="h-5 w-5" />
                     <span className="sr-only">Account</span>
                   </Button>
                 </Link>
-                <Button variant="outline" size="default" onClick={handleLogout}> {/* Logout Button */}
+                <Button variant="outline" size="default" onClick={handleLogout}>
                     Logout
                 </Button>
               </>
             ) : (
-              // User is not logged in
-              <Link href="/login" passHref> {/* Link to login page */}
+              <Link href="/login" passHref>
                 <Button variant="outline" size="default">
                   Login
                 </Button>
@@ -128,8 +119,7 @@ export default function Header() {
             )
           )}
 
-
-          <Sheet>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden">
                 <Menu className="h-6 w-6" />
@@ -139,7 +129,7 @@ export default function Header() {
             <SheetContent side="left" className="flex flex-col p-0">
               <SheetHeader className="p-6 pb-4 border-b">
                 <SheetTitle>
-                  <Link href="/" className="flex items-center gap-2">
+                  <Link href="/" className="flex items-center gap-2" onClick={closeMobileMenu}>
                     <Bike className="h-6 w-6 text-primary" />
                     <span className="font-bold text-lg">Nairobi Grocer</span>
                   </Link>
@@ -147,25 +137,17 @@ export default function Header() {
               </SheetHeader>
               <div className="flex flex-col gap-6 p-6 flex-grow">
                 <nav className="flex flex-col gap-4 text-lg font-medium">
-                  {navLinks.map(({ href, label }) => (
-                    <Link
-                      key={href}
-                      href={href}
-                      className="transition-colors hover:text-primary"
-                    >
-                      {label}
-                    </Link>
-                  ))}
+                  <Link href="/" className="transition-colors hover:text-primary" onClick={closeMobileMenu}>Home</Link>
+                  {user && <Link href="/account/orders" className="transition-colors hover:text-primary" onClick={closeMobileMenu}>My Orders</Link>}
                 </nav>
               </div>
               <div className="p-6 pt-0 mt-auto">
-                 {/* Authentication dependent rendering in mobile menu */}
                 {!loading && (
                   <div className="flex flex-col gap-2">
                   {user ? (
                     <>
                        <Link href="/account/orders" passHref>
-                         <Button variant="outline" size="default" className="w-full">
+                         <Button variant="outline" size="default" className="w-full" onClick={closeMobileMenu}>
                              <User className="h-5 w-5 mr-2" />
                              Account
                          </Button>
@@ -176,7 +158,7 @@ export default function Header() {
                     </>
                   ) : (
                     <Link href="/login" passHref>
-                       <Button variant="outline" size="default" className="w-full">
+                       <Button variant="outline" size="default" className="w-full" onClick={closeMobileMenu}>
                            Login
                        </Button>
                     </Link>

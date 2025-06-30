@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/cart-provider";
 import { useAuth } from "@/context/auth-provider";
@@ -17,7 +18,6 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import MPesaPaymentModal from "@/components/mpesa-payment-modal";
 import CardPaymentModal from "@/components/card-payment-modal";
-import PageSpinner from "@/components/page-spinner";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
 
@@ -33,7 +33,7 @@ const formatCurrency = (amount: number) =>
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { currentUser, loading } = useAuth();
+  const { currentUser } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -49,21 +49,10 @@ export default function CheckoutPage() {
   const [isMPesaModalOpen, setIsMPesaModalOpen] = useState(false);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !currentUser) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to proceed to checkout.",
-        variant: "destructive",
-      });
-      router.push("/login");
-    }
-  }, [currentUser, loading, router, toast]);
-
   const placeOrder = async () => {
-    if (!currentUser) return;
+    setIsPlacingOrder(true);
 
-    const orderData = {
+    const orderData: any = {
       items: cartItems.map((item) => ({
         productId: item.product.id,
         quantity: item.quantity,
@@ -75,11 +64,14 @@ export default function CheckoutPage() {
       status: "Processing" as const,
       customerName: shippingInfo.name,
       customerPhone: shippingInfo.phone,
-      userId: currentUser.uid,
       date: serverTimestamp(),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
+
+    if (currentUser) {
+      orderData.userId = currentUser.uid;
+    }
 
     try {
       const docRef = await addDoc(collection(db, "orders"), orderData);
@@ -91,7 +83,8 @@ export default function CheckoutPage() {
       });
 
       clearCart();
-      router.push("/account/orders");
+      // If user is logged in, go to their orders, otherwise go home.
+      router.push(currentUser ? "/account/orders" : "/");
     } catch (error) {
       console.error("Error placing order:", error);
       toast({
@@ -101,20 +94,13 @@ export default function CheckoutPage() {
       });
     } finally {
       setIsPlacingOrder(false);
+      setIsMPesaModalOpen(false);
+      setIsCardModalOpen(false);
     }
   };
 
   const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!currentUser) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to place an order.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     if (!shippingInfo.name || !shippingInfo.phone || !shippingInfo.address || !shippingInfo.zone || deliveryFee === 0) {
       toast({
@@ -155,10 +141,6 @@ export default function CheckoutPage() {
     const { id, value } = e.target;
     setShippingInfo((prev) => ({ ...prev, [id]: value }));
   };
-
-  if (loading || (!currentUser && !loading)) {
-    return <PageSpinner />;
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -219,13 +201,8 @@ export default function CheckoutPage() {
                 value={selectedPaymentMethod}
                 onValueChange={(value) => {
                   setSelectedPaymentMethod(value);
-                  if (value === "mpesa") {
-                    setIsMPesaModalOpen(true);
-                    setIsCardModalOpen(false);
-                  } else if (value === "stripe") {
-                    setIsCardModalOpen(true);
-                    setIsMPesaModalOpen(false);
-                  }
+                  setIsMPesaModalOpen(value === "mpesa");
+                  setIsCardModalOpen(value === "stripe");
                 }}
                 className="space-y-4"
               >
@@ -289,7 +266,10 @@ export default function CheckoutPage() {
       {/* MPesa Modal */}
       <MPesaPaymentModal
         isOpen={isMPesaModalOpen}
-        onClose={() => setIsMPesaModalOpen(false)}
+        onClose={() => {
+          setIsMPesaModalOpen(false);
+          setIsPlacingOrder(false);
+        }}
         amount={cartTotal + deliveryFee}
         onPaymentInitiate={(phoneNumber, amount) => {
           console.log("Initiating M-Pesa payment for", amount, "to", phoneNumber);
@@ -300,11 +280,16 @@ export default function CheckoutPage() {
       {/* Card Payment Modal */}
       <CardPaymentModal
         isOpen={isCardModalOpen}
-        onClose={() => setIsCardModalOpen(false)}
+        onClose={() => {
+          setIsCardModalOpen(false);
+          setIsPlacingOrder(false);
+        }}
         amount={cartTotal + deliveryFee}
         onPaymentInitiate={(cardDetails) => {
           console.log("Initiating card payment with details:", cardDetails);
-          // TODO: Implement actual Stripe payment initiation logic via backend API
+          // For this example, we'll just call placeOrder to simulate.
+          // In a real app, you'd integrate with Stripe here.
+          placeOrder();
         }}
       />
     </div>

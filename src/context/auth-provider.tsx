@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, {
@@ -9,6 +10,7 @@ import React, {
 } from "react";
 import { User, onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import PageSpinner from "@/components/page-spinner";
 
 interface AuthContextType {
   user: User | null;
@@ -41,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut: () => signOut(auth),
       }}
     >
-      {loading ? <div>Loading authentication...</div> : children}
+      {children}
     </AuthContext.Provider>
   );
 }
