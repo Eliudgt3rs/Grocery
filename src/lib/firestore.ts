@@ -96,3 +96,35 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
     throw error;
   }
 };
+
+// Function to fetch ALL orders for the admin dashboard
+export const getAllOrders = async (): Promise<Order[]> => {
+  try {
+    const querySnapshot = await getDocs(ordersCollection);
+
+    const orders: Order[] = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        userId: data.userId,
+        date: (data.date as Timestamp).toDate(),
+        status: data.status,
+        items: data.items,
+        total: data.total,
+        deliveryFee: data.deliveryFee,
+        deliveryAddress: data.deliveryAddress,
+        customerName: data.customerName,
+        customerPhone: data.customerPhone,
+        orderNumber: data.orderNumber,
+      } as Order;
+    });
+
+    // Sort orders by date in descending order (newest first)
+    orders.sort((a, b) => b.date.getTime() - a.date.getTime());
+    
+    return orders;
+  } catch (error) {
+    console.error("Error getting all orders: ", error);
+    throw error;
+  }
+};
