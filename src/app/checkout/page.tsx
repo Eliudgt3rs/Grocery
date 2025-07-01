@@ -32,7 +32,7 @@ const formatCurrency = (amount: number) =>
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -59,7 +59,7 @@ export default function CheckoutPage() {
       cartTotal: cartTotal,
       deliveryFee: deliveryFee,
       shippingInfo: shippingInfo,
-      userId: currentUser ? currentUser.uid : null,
+      userId: user ? user.uid : null,
     };
     
     const result = await placeOrderAction(payload);
@@ -70,7 +70,7 @@ export default function CheckoutPage() {
         description: "Your order has been placed successfully.",
       });
       clearCart();
-      router.push(currentUser ? "/account/orders" : "/");
+      router.push(user ? "/account/orders" : "/");
     } else {
       toast({
         title: "Order Failed",
