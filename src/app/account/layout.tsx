@@ -8,12 +8,13 @@ import { useAuth } from "@/context/auth-provider";
 
 export default function AccountLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const adminUid = process.env.NEXT_PUBLIC_ADMIN_UID;
 
   const sidebarNavItems = [
     { title: "My Orders", href: "/account/orders", show: true },
     { title: "Profile", href: "/account/profile", show: true },
     { title: "Settings", href: "/account/settings", show: true },
-    { title: "Admin", href: "/admin/dashboard", show: !!user },
+    { title: "Admin", href: "/admin/dashboard", show: user?.uid === adminUid },
   ];
 
   return (

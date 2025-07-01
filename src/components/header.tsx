@@ -27,6 +27,7 @@ export default function Header() {
   const [isCartSheetOpen, setIsCartSheetOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { toast } = useToast();
+  const adminUid = process.env.NEXT_PUBLIC_ADMIN_UID;
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -69,7 +70,7 @@ export default function Header() {
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
             <Link href="/" className="transition-colors hover:text-primary">Home</Link>
             {user && <Link href="/account/orders" className="transition-colors hover:text-primary">My Orders</Link>}
-            {user && <Link href="/admin/dashboard" className="transition-colors hover:text-primary">Admin</Link>}
+            {user?.uid === adminUid && <Link href="/admin/dashboard" className="transition-colors hover:text-primary">Admin</Link>}
           </nav>
         </div>
 
@@ -140,7 +141,7 @@ export default function Header() {
                 <nav className="flex flex-col gap-4 text-lg font-medium">
                   <Link href="/" className="transition-colors hover:text-primary" onClick={closeMobileMenu}>Home</Link>
                   {user && <Link href="/account/orders" className="transition-colors hover:text-primary" onClick={closeMobileMenu}>My Orders</Link>}
-                  {user && <Link href="/admin/dashboard" className="transition-colors hover:text-primary" onClick={closeMobileMenu}>Admin</Link>}
+                  {user?.uid === adminUid && <Link href="/admin/dashboard" className="transition-colors hover:text-primary" onClick={closeMobileMenu}>Admin</Link>}
                 </nav>
               </div>
               <div className="p-6 pt-0 mt-auto">
