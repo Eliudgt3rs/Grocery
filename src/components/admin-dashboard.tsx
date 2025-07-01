@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useMemo } from 'react';
-import { getAllOrders } from '@/lib/firestore';
-import type { Order } from '@/types';
+import { getAllOrders, getProducts } from '@/lib/firestore';
+import type { Order, Product } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ const formatCurrency = (amount: number) =>
 
 export default function AdminDashboard() {
     const [orders, setOrders] = useState<Order[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -22,17 +23,28 @@ export default function AdminDashboard() {
         async function fetchData() {
             try {
                 setLoading(true);
-                const fetchedOrders = await getAllOrders();
+                const [fetchedOrders, fetchedProducts] = await Promise.all([
+                    getAllOrders(),
+                    getProducts()
+                ]);
                 setOrders(fetchedOrders);
+                setProducts(fetchedProducts);
             } catch (err) {
-                console.error("Error fetching all orders:", err);
-                setError("Failed to load order data.");
+                console.error("Error fetching admin data:", err);
+                setError("Failed to load dashboard data.");
             } finally {
                 setLoading(false);
             }
         }
         fetchData();
     }, []);
+
+    const productMap = useMemo(() => {
+        return products.reduce((map, product) => {
+            map[product.id] = product.name;
+            return map;
+        }, {} as Record<string, string>);
+    }, [products]);
 
     const { totalRevenue, totalOrders, averageOrderValue, salesByDay } = useMemo(() => {
         if (!orders.length) {
@@ -129,6 +141,7 @@ export default function AdminDashboard() {
                             <TableRow>
                                 <TableHead>Order #</TableHead>
                                 <TableHead>Customer</TableHead>
+                                <TableHead>Items</TableHead>
                                 <TableHead>Date</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead className="text-right">Total</TableHead>
@@ -139,6 +152,15 @@ export default function AdminDashboard() {
                                 <TableRow key={order.id}>
                                     <TableCell className="font-medium">#{order.orderNumber}</TableCell>
                                     <TableCell>{order.customerName}</TableCell>
+                                    <TableCell>
+                                        <ul className="list-disc list-inside text-xs space-y-1">
+                                            {order.items.map(item => (
+                                                <li key={item.productId}>
+                                                    {item.quantity} x {productMap[item.productId] || 'Unknown Product'}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </TableCell>
                                     <TableCell>{format(order.date, 'PP')}</TableCell>
                                     <TableCell><Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'}>{order.status}</Badge></TableCell>
                                     <TableCell className="text-right">{formatCurrency(order.total)}</TableCell>
