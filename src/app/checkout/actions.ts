@@ -1,8 +1,8 @@
+
 'use server';
 
 import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import type { Product } from '@/types';
 
 // Helper function to ensure Firebase Admin is initialized
 function ensureAdminIsInitialized() {
