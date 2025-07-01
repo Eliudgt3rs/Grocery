@@ -4,17 +4,18 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import type { Product } from '@/types';
 
-// Initialize Firebase Admin SDK
-// This will use the application's default credentials on App Hosting.
-if (admin.apps.length === 0) {
-  try {
-    admin.initializeApp();
-  } catch (error) {
-    console.error('Firebase admin initialization error:', error);
+// Helper function to ensure Firebase Admin is initialized
+function ensureAdminIsInitialized() {
+  if (admin.apps.length === 0) {
+    try {
+      admin.initializeApp();
+    } catch (error) {
+      console.error('Firebase admin initialization error:', error);
+      // We are throwing an error here to be caught by the action's try/catch block
+      throw new Error("Server configuration error.");
+    }
   }
 }
-
-const db = admin.firestore();
 
 // Define the shape of the data we expect from the client
 export interface OrderPayload {
@@ -41,12 +42,15 @@ export interface OrderPayload {
  * This runs on the server and has admin privileges.
  */
 export async function placeOrderAction(payload: OrderPayload): Promise<{ success: boolean; orderId?: string; error?: string }> {
-  const { cartItems, cartTotal, deliveryFee, shippingInfo, userId } = payload;
-
-  const ordersCollection = db.collection('orders');
-  const metadataRef = db.collection('metadata').doc('orders');
-
   try {
+    ensureAdminIsInitialized();
+    const db = admin.firestore();
+
+    const { cartItems, cartTotal, deliveryFee, shippingInfo, userId } = payload;
+
+    const ordersCollection = db.collection('orders');
+    const metadataRef = db.collection('metadata').doc('orders');
+
     const orderId = await db.runTransaction(async (transaction) => {
       const metadataDoc = await transaction.get(metadataRef);
       
