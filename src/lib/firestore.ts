@@ -44,16 +44,18 @@ export const getOrders = async (): Promise<Order[]> => {
       const date = (data.date && typeof data.date.toDate === 'function') ? data.date.toDate() : new Date();
       return {
         id: doc.id,
-        userId: data.userId,
+        userId: data.userId || undefined,
         date: date,
-        status: data.status,
-        items: data.items,
-        total: data.total,
-        deliveryFee: data.deliveryFee,
-        deliveryAddress: data.deliveryAddress,
-        customerName: data.customerName,
-        customerPhone: data.customerPhone,
-        orderNumber: data.orderNumber,
+        status: data.status || 'Processing',
+        items: data.items || [],
+        total: data.total || 0,
+        deliveryFee: data.deliveryFee || 0,
+        deliveryAddress: data.deliveryAddress || 'N/A',
+        customerName: data.customerName || 'N/A',
+        customerPhone: data.customerPhone || 'N/A',
+        orderNumber: data.orderNumber || 0,
+        createdAt: (data.createdAt && typeof data.createdAt.toDate === 'function') ? data.createdAt.toDate() : undefined,
+        updatedAt: (data.updatedAt && typeof data.updatedAt.toDate === 'function') ? data.updatedAt.toDate() : undefined,
       } as Order;
     });
 
@@ -78,16 +80,18 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
       const date = (data.date && typeof data.date.toDate === 'function') ? data.date.toDate() : new Date();
       return {
         id: orderDocSnap.id,
-        userId: data.userId,
+        userId: data.userId || undefined,
         date: date,
-        status: data.status,
-        items: data.items,
-        total: data.total,
-        deliveryFee: data.deliveryFee,
-        deliveryAddress: data.deliveryAddress,
-        customerName: data.customerName,
-        customerPhone: data.customerPhone,
-        orderNumber: data.orderNumber,
+        status: data.status || 'Processing',
+        items: data.items || [],
+        total: data.total || 0,
+        deliveryFee: data.deliveryFee || 0,
+        deliveryAddress: data.deliveryAddress || 'N/A',
+        customerName: data.customerName || 'N/A',
+        customerPhone: data.customerPhone || 'N/A',
+        orderNumber: data.orderNumber || 0,
+        createdAt: (data.createdAt && typeof data.createdAt.toDate === 'function') ? data.createdAt.toDate() : undefined,
+        updatedAt: (data.updatedAt && typeof data.updatedAt.toDate === 'function') ? data.updatedAt.toDate() : undefined,
       } as Order;
     } else {
       console.log("No such order!");

@@ -24,27 +24,34 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
             db.collection('products').get()
         ]);
 
-        const orders: Order[] = ordersSnapshot.docs.map(doc => {
-            const data = doc.data();
-            // Safely convert Firestore Timestamps to JS Dates for client-side compatibility
-            const date = (data.date && typeof data.date.toDate === 'function') 
-                ? data.date.toDate() 
-                : new Date();
-            
-            return {
-                id: doc.id,
-                userId: data.userId,
-                date: date,
-                status: data.status,
-                items: data.items,
-                total: data.total,
-                deliveryFee: data.deliveryFee,
-                deliveryAddress: data.deliveryAddress,
-                customerName: data.customerName,
-                customerPhone: data.customerPhone,
-                orderNumber: data.orderNumber,
-            } as Order;
-        });
+        const orders: Order[] = ordersSnapshot.docs
+            .map(doc => {
+                const data = doc.data();
+                if (!data) return null; // Handle cases where doc data is empty
+
+                // Safely convert Firestore Timestamps to JS Dates
+                const date = (data.date && typeof data.date.toDate === 'function') 
+                    ? data.date.toDate() 
+                    : new Date();
+                
+                // Provide default values for all fields to prevent crashes
+                return {
+                    id: doc.id,
+                    userId: data.userId || undefined,
+                    date: date,
+                    status: data.status || 'Processing',
+                    items: data.items || [],
+                    total: data.total || 0,
+                    deliveryFee: data.deliveryFee || 0,
+                    deliveryAddress: data.deliveryAddress || 'N/A',
+                    customerName: data.customerName || 'N/A',
+                    customerPhone: data.customerPhone || 'N/A',
+                    orderNumber: data.orderNumber || 0,
+                    createdAt: (data.createdAt && typeof data.createdAt.toDate === 'function') ? data.createdAt.toDate() : undefined,
+                    updatedAt: (data.updatedAt && typeof data.updatedAt.toDate === 'function') ? data.updatedAt.toDate() : undefined,
+                } as Order;
+            })
+            .filter((order): order is Order => order !== null); // Filter out any null entries
 
         // Sort orders by date in descending order (newest first)
         orders.sort((a, b) => b.date.getTime() - a.date.getTime());
