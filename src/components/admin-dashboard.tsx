@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo } from 'react';
-import { getAdminDashboardData } from '@/app/admin/dashboard/actions';
 import type { Order, Product } from '@/types';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -24,12 +26,60 @@ export default function AdminDashboard() {
             try {
                 setLoading(true);
                 setError(null);
-                const { orders: fetchedOrders, products: fetchedProducts } = await getAdminDashboardData();
+                
+                const ordersSnapshot = await getDocs(collection(db, 'orders'));
+                const productsSnapshot = await getDocs(collection(db, 'products'));
+
+                const fetchedOrders: Order[] = ordersSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    if (!data) return null;
+
+                    const date = (data.date && typeof data.date.toDate === 'function') 
+                        ? data.date.toDate() 
+                        : new Date();
+                    
+                    return {
+                        id: doc.id,
+                        userId: data.userId || undefined,
+                        date: date,
+                        status: data.status || 'Processing',
+                        items: Array.isArray(data.items) ? data.items : [],
+                        total: typeof data.total === 'number' ? data.total : 0,
+                        deliveryFee: typeof data.deliveryFee === 'number' ? data.deliveryFee : 0,
+                        deliveryAddress: data.deliveryAddress || 'N/A',
+                        customerName: data.customerName || 'N/A',
+                        customerPhone: data.customerPhone || 'N/A',
+                        orderNumber: typeof data.orderNumber === 'number' ? data.orderNumber : 0,
+                        createdAt: (data.createdAt && typeof data.createdAt.toDate === 'function') ? data.createdAt.toDate() : undefined,
+                        updatedAt: (data.updatedAt && typeof data.updatedAt.toDate === 'function') ? data.updatedAt.toDate() : undefined,
+                    } as Order;
+                }).filter((order): order is Order => order !== null);
+
+                fetchedOrders.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+                const fetchedProducts: Product[] = productsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    if (!data) return null;
+                    return {
+                        id: doc.id,
+                        name: data.name || 'Unnamed Product',
+                        description: data.description || '',
+                        price: typeof data.price === 'number' ? data.price : 0,
+                        image: data.image || 'https://placehold.co/400x400.png',
+                        category: data.category || 'Uncategorized',
+                        stock: typeof data.stock === 'number' ? data.stock : 0,
+                        rating: typeof data.rating === 'number' ? data.rating : 0,
+                        reviews: typeof data.reviews === 'number' ? data.reviews : 0,
+                        aiHint: data.aiHint || '',
+                    } as Product;
+                }).filter((product): product is Product => product !== null);
+                
                 setOrders(fetchedOrders);
                 setProducts(fetchedProducts);
+
             } catch (err: any) {
                 console.error("Error fetching admin data:", err);
-                setError(err.message || "Failed to load dashboard data.");
+                setError("Failed to load dashboard data. Please ensure you have updated your Firestore security rules to grant admin access.");
             } finally {
                 setLoading(false);
             }
@@ -51,7 +101,7 @@ export default function AdminDashboard() {
 
         const totalRevenue = orders.reduce((acc, order) => acc + order.total, 0);
         const totalOrders = orders.length;
-        const averageOrderValue = totalRevenue / totalOrders;
+        const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
         const salesData = orders.reduce((acc, order) => {
             const day = format(order.date, 'yyyy-MM-dd');
@@ -170,4 +220,3 @@ export default function AdminDashboard() {
             </Card>
         </div>
     );
-}
