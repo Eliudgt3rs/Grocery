@@ -18,11 +18,9 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     const db = adminDb;
 
     try {
-        // Fetch orders and products in parallel for efficiency.
-        const [ordersSnapshot, productsSnapshot] = await Promise.all([
-            db.collection('orders').get(),
-            db.collection('products').get()
-        ]);
+        // Fetch data sequentially to improve stability in some environments.
+        const ordersSnapshot = await db.collection('orders').get();
+        const productsSnapshot = await db.collection('products').get();
 
         const orders: Order[] = ordersSnapshot.docs
             .map(doc => {
