@@ -1,12 +1,14 @@
-import * as admin from 'firebase-admin';
+import { getApps, initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 
-// Check if the app is already initialized to avoid errors
-if (!admin.apps.length) {
+// Check if the app is already initialized to avoid errors during hot-reloads in dev
+if (!getApps().length) {
   try {
     // When deployed on App Hosting, the SDK is automatically initialized.
     // For local development, you would need to set up Application Default Credentials.
     // https://firebase.google.com/docs/app-hosting/dev-experience#local-backend-instance
-    admin.initializeApp();
+    initializeApp();
   } catch (error: any) {
     console.error('Firebase Admin SDK initialization error:', error);
     // We are throwing a more informative error to help with debugging.
@@ -14,5 +16,5 @@ if (!admin.apps.length) {
   }
 }
 
-export const adminDb = admin.firestore();
-export const adminAuth = admin.auth();
+export const adminDb = getFirestore();
+export const adminAuth = getAuth();
