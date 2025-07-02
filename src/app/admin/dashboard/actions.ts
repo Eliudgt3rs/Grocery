@@ -18,9 +18,11 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     const db = adminDb;
 
     try {
-        // Fetch orders and products in parallel for efficiency
+        // Fetch orders and products in parallel for efficiency.
+        // Removed .orderBy() to avoid needing a composite index in Firestore.
+        // Sorting will be done in the code after fetching.
         const [ordersSnapshot, productsSnapshot] = await Promise.all([
-            db.collection('orders').orderBy('date', 'desc').get(),
+            db.collection('orders').get(),
             db.collection('products').get()
         ]);
 
@@ -43,6 +45,9 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
                 orderNumber: data.orderNumber,
             } as Order;
         });
+
+        // Sort orders by date in descending order (newest first)
+        orders.sort((a, b) => b.date.getTime() - a.date.getTime());
 
         const products: Product[] = productsSnapshot.docs.map(doc => {
             return { id: doc.id, ...doc.data() } as Product;
