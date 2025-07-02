@@ -1,24 +1,8 @@
 'use server';
 
-import * as admin from 'firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
 import type { Order, Product } from '@/types';
 import { Timestamp } from 'firebase-admin/firestore';
-
-function ensureAdminIsInitialized() {
-  // Check if the app is already initialized to avoid errors
-  if (admin.apps.length === 0) {
-    try {
-      // initializeApp() will use the service account credentials from the environment
-      // when deployed on Firebase App Hosting. For local development, you would
-      // need to set up the GOOGLE_APPLICATION_CREDENTIALS environment variable.
-      admin.initializeApp();
-    } catch (error) {
-      console.error('Firebase admin initialization error:', error);
-      // Throw an error that the client can catch and display
-      throw new Error("Server configuration error. Could not initialize Firebase Admin.");
-    }
-  }
-}
 
 interface AdminDashboardData {
     orders: Order[];
@@ -31,8 +15,7 @@ interface AdminDashboardData {
  * and should only be called from a secured admin environment.
  */
 export async function getAdminDashboardData(): Promise<AdminDashboardData> {
-    ensureAdminIsInitialized();
-    const db = admin.firestore();
+    const db = adminDb;
 
     try {
         // Fetch orders and products in parallel for efficiency

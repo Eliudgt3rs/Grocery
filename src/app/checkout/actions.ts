@@ -1,21 +1,8 @@
 
 'use server';
 
-import * as admin from 'firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-
-// Helper function to ensure Firebase Admin is initialized
-function ensureAdminIsInitialized() {
-  if (admin.apps.length === 0) {
-    try {
-      admin.initializeApp();
-    } catch (error) {
-      console.error('Firebase admin initialization error:', error);
-      // We are throwing an error here to be caught by the action's try/catch block
-      throw new Error("Server configuration error.");
-    }
-  }
-}
 
 // Define the shape of the data we expect from the client
 export interface OrderPayload {
@@ -43,8 +30,7 @@ export interface OrderPayload {
  */
 export async function placeOrderAction(payload: OrderPayload): Promise<{ success: boolean; orderId?: string; error?: string }> {
   try {
-    ensureAdminIsInitialized();
-    const db = admin.firestore();
+    const db = adminDb;
 
     const { cartItems, cartTotal, deliveryFee, shippingInfo, userId } = payload;
 
