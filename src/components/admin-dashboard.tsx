@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useEffect, useState, useMemo } from 'react';
-import { getAllOrders, getProducts } from '@/lib/firestore';
+import { getAdminDashboardData } from '@/app/admin/dashboard/actions';
 import type { Order, Product } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -24,15 +23,13 @@ export default function AdminDashboard() {
         async function fetchData() {
             try {
                 setLoading(true);
-                const [fetchedOrders, fetchedProducts] = await Promise.all([
-                    getAllOrders(),
-                    getProducts()
-                ]);
+                setError(null);
+                const { orders: fetchedOrders, products: fetchedProducts } = await getAdminDashboardData();
                 setOrders(fetchedOrders);
                 setProducts(fetchedProducts);
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error fetching admin data:", err);
-                setError("Failed to load dashboard data.");
+                setError(err.message || "Failed to load dashboard data.");
             } finally {
                 setLoading(false);
             }
