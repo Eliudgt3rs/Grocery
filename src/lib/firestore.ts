@@ -41,10 +41,11 @@ export const getOrders = async (): Promise<Order[]> => {
 
     const orders: Order[] = querySnapshot.docs.map(doc => {
       const data = doc.data();
+      const date = (data.date && typeof data.date.toDate === 'function') ? data.date.toDate() : new Date();
       return {
         id: doc.id,
         userId: data.userId,
-        date: (data.date as Timestamp).toDate(),
+        date: date,
         status: data.status,
         items: data.items,
         total: data.total,
@@ -74,10 +75,11 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
 
     if (orderDocSnap.exists()) {
       const data = orderDocSnap.data();
+      const date = (data.date && typeof data.date.toDate === 'function') ? data.date.toDate() : new Date();
       return {
         id: orderDocSnap.id,
         userId: data.userId,
-        date: (data.date as Timestamp).toDate(),
+        date: date,
         status: data.status,
         items: data.items,
         total: data.total,
@@ -104,10 +106,11 @@ export const getAllOrders = async (): Promise<Order[]> => {
 
     const orders: Order[] = querySnapshot.docs.map(doc => {
       const data = doc.data();
+      const date = (data.date && typeof data.date.toDate === 'function') ? data.date.toDate() : new Date();
       return {
         id: doc.id,
         userId: data.userId,
-        date: (data.date as Timestamp).toDate(),
+        date: date,
         status: data.status,
         items: data.items,
         total: data.total,
