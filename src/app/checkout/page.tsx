@@ -95,19 +95,52 @@ export default function CheckoutPage() {
       });
       return;
     }
-
-    if (!selectedPaymentMethod) {
+    
+    if (cartItems.length === 0) {
       toast({
-        title: "Select a payment method",
-        description: "Please choose how you’d like to pay before placing the order.",
+        title: "Your cart is empty",
         variant: "destructive",
       });
       return;
     }
+    
+    // Guest checkout logic: Send order via WhatsApp
+    if (!user) {
+        setIsPlacingOrder(true);
+        const message = `GUEST ORDER\n\nShipping Details:\nName: ${shippingInfo.name}\nPhone: ${shippingInfo.phone}\nAddress: ${shippingInfo.address}, ${shippingInfo.zone}\n\nOrder Items:\n${cartItems
+          .map(
+            ({ product, quantity }) =>
+              `- ${quantity} x ${product.name} (${formatCurrency(product.price * quantity)})`
+          )
+          .join("\n")}\n\nTotal: ${formatCurrency(cartTotal + deliveryFee)}`;
 
-    if (cartItems.length === 0) {
+        const whatsappNumber = "+254719790026"; // Replace with the actual WhatsApp number
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+          message
+        )}`;
+        
+        // Give a moment for the user to see the loading state
+        setTimeout(() => {
+            window.open(whatsappUrl, "_blank");
+
+            toast({
+              title: "Complete Your Order in WhatsApp!",
+              description: "Your order details have been prepared. Please send the message in WhatsApp to confirm.",
+            });
+
+            clearCart();
+            router.push("/");
+            setIsPlacingOrder(false);
+        }, 1000);
+
+        return;
+    }
+
+    // Logged-in user checkout logic
+    if (!selectedPaymentMethod) {
       toast({
-        title: "Your cart is empty",
+        title: "Select a payment method",
+        description: "Please choose how you’d like to pay before placing the order.",
         variant: "destructive",
       });
       return;
@@ -173,28 +206,43 @@ export default function CheckoutPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Method</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RadioGroup
-                value={selectedPaymentMethod}
-                onValueChange={setSelectedPaymentMethod}
-                className="space-y-4"
-                disabled={isPlacingOrder}
-              >
-                <Label htmlFor="mpesa" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary">
-                  <RadioGroupItem value="mpesa" id="mpesa" />
-                  M-Pesa
-                </Label>
-                <Label htmlFor="stripe" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary">
-                  <RadioGroupItem value="stripe" id="stripe" />
-                  Credit/Debit Card (Stripe)
-                </Label>
-              </RadioGroup>
-            </CardContent>
-          </Card>
+          {user && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Method</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup
+                  value={selectedPaymentMethod}
+                  onValueChange={setSelectedPaymentMethod}
+                  className="space-y-4"
+                  disabled={isPlacingOrder}
+                >
+                  <Label htmlFor="mpesa" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary">
+                    <RadioGroupItem value="mpesa" id="mpesa" />
+                    M-Pesa
+                  </Label>
+                  <Label htmlFor="stripe" className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary">
+                    <RadioGroupItem value="stripe" id="stripe" />
+                    Credit/Debit Card (Stripe)
+                  </Label>
+                </RadioGroup>
+              </CardContent>
+            </Card>
+          )}
+
+          {!user && (
+             <Card>
+              <CardHeader>
+                  <CardTitle>How to Order</CardTitle>
+              </CardHeader>
+              <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                      As a guest, you will be redirected to WhatsApp to place your order directly with the seller. No payment is required on this website.
+                  </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="lg:col-span-1">
@@ -231,9 +279,9 @@ export default function CheckoutPage() {
                   <span>{formatCurrency(cartTotal + deliveryFee)}</span>
                 </div>
               </div>
-              <Button type="submit" disabled={cartItems.length === 0 || isPlacingOrder || !selectedPaymentMethod} className="w-full mt-6 bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button type="submit" disabled={cartItems.length === 0 || isPlacingOrder || (user && !selectedPaymentMethod)} className="w-full mt-6 bg-primary text-primary-foreground hover:bg-primary/90">
                 {isPlacingOrder ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {isPlacingOrder ? "Placing Order..." : "Place Order"}
+                {isPlacingOrder ? "Processing..." : user ? "Place Order" : "Send Order via WhatsApp"}
               </Button>
             </CardContent>
           </Card>
